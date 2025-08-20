@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from accounts.views import UserViewSet
@@ -17,4 +18,8 @@ router.register(r"milk-records", MilkRecordViewSet, basename="milkrecord")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
+    # Root landing: redirect to API root for convenience
+    path("", lambda request: HttpResponseRedirect("/api/"), name="root-redirect"),
+    # Simple health/ping endpoint
+    path("healthz/", lambda request: JsonResponse({"status": "ok"}), name="healthz"),
 ]
