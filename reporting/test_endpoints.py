@@ -4,6 +4,7 @@ Test script for FarmHub Reporting API endpoints
 """
 import sys
 import os
+
 sys.path.append(os.path.dirname(__file__))
 
 from main import app
@@ -12,17 +13,20 @@ from fastapi.testclient import TestClient
 # Create test client
 client = TestClient(app)
 
+
 def test_health_endpoint():
     """Test the health endpoint"""
     response = client.get("/health")
     print(f"Health endpoint: {response.status_code} - {response.json()}")
     return response.status_code == 200
 
+
 def test_summary_endpoint():
     """Test the summary endpoint"""
     response = client.get("/summary")
     print(f"Summary endpoint: {response.status_code} - {response.json()}")
     return response.status_code == 200
+
 
 def test_farm_summary_endpoint():
     """Test the farm summary endpoint"""
@@ -39,6 +43,7 @@ def test_farm_summary_endpoint():
         print(f"  Error: {response.text}")
     return response.status_code == 200
 
+
 def test_farm_milk_production_endpoint():
     """Test the farm milk production endpoint"""
     farm_id = 1
@@ -48,10 +53,13 @@ def test_farm_milk_production_endpoint():
         data = response.json()
         print(f"  Found {len(data)} cows with milk production data")
         for cow in data:
-            print(f"    {cow['cow_tag']} ({cow['cow_breed']}): {cow['total_liters']} liters, {cow['record_count']} records")
+            print(
+                f"    {cow['cow_tag']} ({cow['cow_breed']}): {cow['total_liters']} liters, {cow['record_count']} records"
+            )
     else:
         print(f"  Error: {response.text}")
     return response.status_code == 200
+
 
 def test_farm_daily_milk_endpoint():
     """Test the farm daily milk endpoint"""
@@ -62,15 +70,18 @@ def test_farm_daily_milk_endpoint():
         data = response.json()
         print(f"  Found {len(data)} days of milk production data")
         for day in data[:3]:  # Show first 3 days
-            print(f"    {day['date']}: {day['total_liters']} liters from {day['cow_count']} cows")
+            print(
+                f"    {day['date']}: {day['total_liters']} liters from {day['cow_count']} cows"
+            )
     else:
         print(f"  Error: {response.text}")
     return response.status_code == 200
 
+
 if __name__ == "__main__":
     print("Testing FarmHub Reporting API endpoints...")
     print("=" * 50)
-    
+
     # Test all endpoints
     tests = [
         ("Health", test_health_endpoint),
@@ -79,7 +90,7 @@ if __name__ == "__main__":
         ("Farm Milk Production", test_farm_milk_production_endpoint),
         ("Farm Daily Milk", test_farm_daily_milk_endpoint),
     ]
-    
+
     results = []
     for test_name, test_func in tests:
         print(f"\n{test_name} Test:")
@@ -89,7 +100,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"  Error: {str(e)}")
             results.append((test_name, False))
-    
+
     print("\n" + "=" * 50)
     print("Test Results:")
     for test_name, success in results:

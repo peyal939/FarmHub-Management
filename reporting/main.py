@@ -54,34 +54,40 @@ class GeneralSummaryResponse(BaseModel):
 @app.get("/summary", response_model=GeneralSummaryResponse)
 async def get_general_summary():
     """Get overall system summary with totals across all farms."""
-    
+
     try:
         with engine.connect() as connection:
             # Count total farms
             farms_query = text("SELECT COUNT(*) as farm_count FROM farms_farm")
             farms_result = connection.execute(farms_query).fetchone()
-            
+
             # Count total farmers
-            farmers_query = text("SELECT COUNT(*) as farmer_count FROM farms_farmerprofile")
+            farmers_query = text(
+                "SELECT COUNT(*) as farmer_count FROM farms_farmerprofile"
+            )
             farmers_result = connection.execute(farmers_query).fetchone()
-            
+
             # Count total cows
             cows_query = text("SELECT COUNT(*) as cow_count FROM livestock_cow")
             cows_result = connection.execute(cows_query).fetchone()
-            
+
             # Sum total milk production
-            milk_query = text("SELECT COALESCE(SUM(liters), 0) as total_milk FROM production_milkrecord")
+            milk_query = text(
+                "SELECT COALESCE(SUM(liters), 0) as total_milk FROM production_milkrecord"
+            )
             milk_result = connection.execute(milk_query).fetchone()
-            
+
             return GeneralSummaryResponse(
                 total_farms=farms_result.farm_count,
                 total_farmers=farmers_result.farmer_count,
                 total_cows=cows_result.cow_count,
-                total_milk_production=float(milk_result.total_milk)
+                total_milk_production=float(milk_result.total_milk),
             )
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving general summary: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving general summary: {str(e)}"
+        )
 
 
 @app.get("/reports/farm/{farm_id}/summary", response_model=FarmSummaryResponse)
