@@ -72,7 +72,9 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
             if not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied("You can only onboard farmers to your own farms.")
+                raise PermissionDenied(
+                    "You can only onboard farmers to your own farms."
+                )
             return serializer.save()
 
         # Farmers (and others) cannot create profiles
@@ -88,7 +90,10 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
         if role == getattr(user.__class__, "Roles").AGENT:
             # Ensure updated farm remains within agent's management
             new_farm_id = self.request.data.get("farm")
-            if new_farm_id and not Farm.objects.filter(id=new_farm_id, agent_id=user.id).exists():
+            if (
+                new_farm_id
+                and not Farm.objects.filter(id=new_farm_id, agent_id=user.id).exists()
+            ):
                 from rest_framework.exceptions import PermissionDenied
 
                 raise PermissionDenied("You can only reassign within your farms.")
