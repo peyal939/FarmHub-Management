@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework',
     # Local apps
     'accounts',
+    'farms',
 ]
 
 MIDDLEWARE = [
