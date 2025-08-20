@@ -38,12 +38,18 @@ Strict rule: PostgreSQL only (DB name: `farmhub`).
 - Backend: Django 5 + DRF
 - Reporting: FastAPI + SQLAlchemy
 - DB: PostgreSQL
-- Auth: Django auth (JWT to be added when endpoints are built)
+- Auth: JWT (SimpleJWT) with DRF default IsAuthenticated
 
 User roles
 - SUPERADMIN — full access; creates Agents/Farmers; audits
-- AGENT — manages assigned farms; onboard farmers
+- AGENT — manages assigned farms; can onboard farmers to their farms
 - FARMER — manages own cows; logs milk and activities
+
+Role access summary
+- Farm: SuperAdmin all; Agent limited to farms they manage; Farmer read-only if applicable
+- FarmerProfile: SuperAdmin all; Agent can create/update only within their farms; Farmer read-only (own)
+- Cow: SuperAdmin all; Agent within managed farms; Farmer only own cows in their farm
+- Activity/MilkRecord: SuperAdmin all; Agent only cows in managed farms; Farmer only their own cows
 
 ---
 
@@ -150,6 +156,13 @@ Core API (DRF)
 - GET /api/cows/ — list cows
 - POST /api/milk-records/ — create milk record (farmer)
 
+Quick JWT flow (PowerShell)
+```powershell
+$token = Invoke-RestMethod -Method POST -Uri "http://127.0.0.1:8000/auth/token/" -ContentType "application/json" -Body '{"username":"farmer_sunamganj","password":"Farmer@123"}'
+$headers = @{ Authorization = "Bearer $($token.access)" }
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/cows/" -Headers $headers
+```
+
 Reporting (FastAPI)
 - GET /summary — totals across all farms
 - GET /reports/farm/{farm_id}/summary — farmers, cows, total milk
@@ -166,7 +179,7 @@ Endpoints
 
 Usage
 - Add header to protected API calls: `Authorization: Bearer <access_token>`
-- Default DRF permission is `IsAuthenticated` globally; adjust per-view if needed.
+- DRF default permission is `IsAuthenticated` globally; viewsets add stricter role checks.
 
 Example (PowerShell, optional)
 
@@ -184,7 +197,7 @@ Created by `accounts/migrations/0002_seed_initial_data.py` (if users don’t alr
 - Agent: username `agent_rajshahi`, password `Agent@123`
 - Farmer: username `farmer_sunamganj`, password `Farmer@123`
 - Farm: Padma Dairy Farm (Rajshahi, Bangladesh)
-- Cows: BD-RJ-001 (Red Chittagong), BD-RJ-002 (Sahiwal)
+- Cows: BD-RJ-001 (Red Chittagong), BD-RJ-002 (Sahiwal), BD-RJ-003 (Latest)
 - Milk records and activities for sample dates
 
 ---
@@ -192,12 +205,11 @@ Created by `accounts/migrations/0002_seed_initial_data.py` (if users don’t alr
 ## Postman Collection
 
 This repo includes an exported Postman collection at `postman/FarmHub.postman_collection.json` covering:
-- Auth (placeholder)
-- Users, Farms, Farmer Profiles
-- Cows, Activities, Milk Records
+- Auth (Obtain/Refresh) with tests capturing tokens into collection variables
+- Farms, Farmer Profiles, Cows, Activities, Milk Records (role-aware sample bodies)
 - Reporting endpoints
 
-Import this file into Postman, set environment variables (baseUrl, token when auth is added), and run requests.
+Import the collection, set `baseUrl`/`reportUrl` and username/password variables, run "Auth → Obtain Token", then exercise endpoints. Collection-level Bearer auth will use `{{accessToken}}` automatically.
 
 ---
 
