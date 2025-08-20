@@ -2,6 +2,10 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 from accounts.views import UserViewSet
 from farms.views import FarmViewSet, FarmerProfileViewSet
 from livestock.views import CowViewSet, ActivityViewSet
@@ -17,6 +21,9 @@ router.register(r"milk-records", MilkRecordViewSet, basename="milkrecord")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Auth (JWT)
+    path("auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # DRF browsable API at both / and /api/
     path("api/", include(router.urls)),
     path("", include(router.urls)),
