@@ -1,0 +1,17 @@
+[project]
+name = "farmhub-reporting"
+version = "0.1.0"
+description = "FastAPI reporting microservice for FarmHub"
+authors = [{ name = "FarmHub", email = "admin@farmhub.bd" }]
+requires-python = ">=3.10"
+readme = "README.md"
+
+[project.optional-dependencies]
+# For local run convenience
+dev = ["uvicorn[standard]"]
+
+[tool.uvicorn]
+factory = false
+host = "127.0.0.1"
+port = 8001
+reload = true
