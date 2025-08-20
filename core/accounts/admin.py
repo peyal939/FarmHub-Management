@@ -1,6 +1,14 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from .models import User
+from farms.models import FarmerProfile
+
+
+class FarmerProfileInline(admin.StackedInline):
+	model = FarmerProfile
+	can_delete = False
+	extra = 0
+	fk_name = 'user'
 
 
 @admin.register(User)
@@ -22,3 +30,5 @@ class UserAdmin(DjangoUserAdmin):
 	list_filter = ("is_staff", "is_superuser", "is_active", "groups", "role")
 	search_fields = ("username", "first_name", "last_name", "email")
 	ordering = ("username",)
+
+	inlines = [FarmerProfileInline]
