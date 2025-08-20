@@ -2,13 +2,13 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Farm, FarmerProfile
 from .serializers import FarmSerializer, FarmerProfileSerializer
-from .permissions import IsAgentAndOwner
+from .permissions import IsAgentAndFarmOwner, IsSuperAdmin
 
 
 class FarmViewSet(viewsets.ModelViewSet):
     queryset = Farm.objects.select_related("agent").all().order_by("name")
     serializer_class = FarmSerializer
-    permission_classes = [IsAuthenticated, IsAgentAndOwner]
+    permission_classes = [IsAuthenticated, (IsSuperAdmin | IsAgentAndFarmOwner)]
 
     def get_queryset(self):
         qs = super().get_queryset()
