@@ -34,11 +34,7 @@ class FarmViewSet(viewsets.ModelViewSet):
 class FarmerProfileViewSet(viewsets.ModelViewSet):
     queryset = FarmerProfile.objects.select_related("user", "farm").all()
     serializer_class = FarmerProfileSerializer
-    permission_classes = [IsAuthenticated, (IsSuperAdmin,)]
-
-    def get_permissions(self):
-        # Custom handling: allow Agent and Farmer in a scoped way below
-        return [p() if isinstance(p, type) else p for p in self.permission_classes]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -52,3 +48,51 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
         if role == getattr(user.__class__, "Roles").FARMER:
             return qs.filter(user_id=user.id)
         return qs.none()
+
+    def perform_create(self, serializer):
+        """
+        Allow:
+        - SuperAdmin/staff: create any mapping.
+        - Agent: only create profiles for farms they manage (farm.agent_id == request.user.id).
+        - Farmer: not allowed.
+        """
+        user = self.request.user
+        # Superadmin/staff bypass
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return serializer.save()
+
+        role = getattr(user, "role", None)
+        if role == getattr(user.__class__, "Roles").AGENT:
+            farm_id = self.request.data.get("farm")
+            if not farm_id:
+                from rest_framework.exceptions import ValidationError
+
+                raise ValidationError({"farm": "This field is required."})
+            # Verify this farm belongs to the agent
+            if not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
+                from rest_framework.exceptions import PermissionDenied
+
+                raise PermissionDenied("You can only onboard farmers to your own farms.")
+            return serializer.save()
+
+        # Farmers (and others) cannot create profiles
+        from rest_framework.exceptions import PermissionDenied
+
+        raise PermissionDenied("Not allowed to create farmer profiles.")
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return serializer.save()
+        role = getattr(user, "role", None)
+        if role == getattr(user.__class__, "Roles").AGENT:
+            # Ensure updated farm remains within agent's management
+            new_farm_id = self.request.data.get("farm")
+            if new_farm_id and not Farm.objects.filter(id=new_farm_id, agent_id=user.id).exists():
+                from rest_framework.exceptions import PermissionDenied
+
+                raise PermissionDenied("You can only reassign within your farms.")
+            return serializer.save()
+        from rest_framework.exceptions import PermissionDenied
+
+        raise PermissionDenied("Not allowed to update farmer profiles.")
