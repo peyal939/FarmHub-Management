@@ -1,6 +1,59 @@
 from rest_framework.permissions import BasePermission
 
 
+class IsAgentForRelatedFarm(BasePermission):
+    """
+    Allows access if the user's role is AGENT and the object (Cow/Activity/MilkRecord)
+    belongs to a farm managed by that agent.
+    """
+
+    message = "You must be the assigned Agent for this farm."
+
+    def _is_agent(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        # superusers/staff pass here to avoid blocking
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return True
+        role = getattr(user, "role", None)
+        return role == getattr(user.__class__, "Roles").AGENT
+
+    def has_permission(self, request, view):
+        user = request.user
+        return self._is_agent(user)
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        # Superusers/staff allowed
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return True
+        if not self._is_agent(user):
+            return False
+
+        # Determine farm from object
+        farm_id = None
+        try:
+            # Cow -> has farm
+            if hasattr(obj, "farm") and getattr(obj.farm, "id", None) is not None:
+                farm_id = obj.farm.id
+            # Activity/MilkRecord -> obj.cow.farm
+            elif hasattr(obj, "cow") and hasattr(obj.cow, "farm"):
+                farm_id = getattr(obj.cow.farm, "id", None)
+        except Exception:
+            return False
+
+        if farm_id is None:
+            return False
+
+        # Lazy import to avoid circulars
+        try:
+            from farms.models import Farm
+
+            return Farm.objects.filter(id=farm_id, agent_id=user.id).exists()
+        except Exception:
+            return False
+
+
 class IsFarmerAndCowOwner(BasePermission):
     """
     Allows access if the user's role is FARMER and the cow/activity/milk record belongs to them.

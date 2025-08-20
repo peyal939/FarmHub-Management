@@ -34,3 +34,21 @@ class FarmViewSet(viewsets.ModelViewSet):
 class FarmerProfileViewSet(viewsets.ModelViewSet):
     queryset = FarmerProfile.objects.select_related("user", "farm").all()
     serializer_class = FarmerProfileSerializer
+    permission_classes = [IsAuthenticated, (IsSuperAdmin,)]
+
+    def get_permissions(self):
+        # Custom handling: allow Agent and Farmer in a scoped way below
+        return [p() if isinstance(p, type) else p for p in self.permission_classes]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        # Superusers/staff see all
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return qs
+        role = getattr(user, "role", None)
+        if role == getattr(user.__class__, "Roles").AGENT:
+            return qs.filter(farm__agent_id=user.id)
+        if role == getattr(user.__class__, "Roles").FARMER:
+            return qs.filter(user_id=user.id)
+        return qs.none()
