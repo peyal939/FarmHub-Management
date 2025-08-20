@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     # Local apps
     'accounts',
     'farms',
+    'livestock',
 ]
 
 MIDDLEWARE = [
