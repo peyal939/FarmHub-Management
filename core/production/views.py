@@ -4,5 +4,5 @@ from .serializers import MilkRecordSerializer
 
 
 class MilkRecordViewSet(viewsets.ModelViewSet):
-	queryset = MilkRecord.objects.select_related('cow').all().order_by('-date')
-	serializer_class = MilkRecordSerializer
+    queryset = MilkRecord.objects.select_related("cow").all().order_by("-date")
+    serializer_class = MilkRecordSerializer
