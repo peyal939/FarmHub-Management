@@ -158,6 +158,24 @@ Reporting (FastAPI)
 
 ---
 
+## Auth (JWT)
+
+Endpoints
+- POST /auth/token/ — obtain access/refresh (body: username, password)
+- POST /auth/token/refresh/ — refresh access token
+
+Usage
+- Add header to protected API calls: `Authorization: Bearer <access_token>`
+- Default DRF permission is `IsAuthenticated` globally; adjust per-view if needed.
+
+Example (PowerShell, optional)
+
+```powershell
+Invoke-RestMethod -Method POST -Uri "http://127.0.0.1:8000/auth/token/" -ContentType "application/json" -Body '{"username":"farmer_sunamganj","password":"Farmer@123"}'
+```
+
+---
+
 ## Seed Data
 
 Created by `accounts/migrations/0002_seed_initial_data.py` (if users don’t already exist):

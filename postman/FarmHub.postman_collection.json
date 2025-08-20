@@ -5,6 +5,28 @@
   },
   "item": [
     {
+      "name": "Auth - Obtain Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {"mode": "raw", "raw": "{\n  \"username\": \"farmer_sunamganj\",\n  \"password\": \"Farmer@123\"\n}"},
+        "url": {"raw": "{{baseUrl}}/auth/token/", "host": ["{{baseUrl}}"], "path": ["auth","token",""]}
+      }
+    },
+    {
+      "name": "Auth - Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {"mode": "raw", "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}"},
+        "url": {"raw": "{{baseUrl}}/auth/token/refresh/", "host": ["{{baseUrl}}"], "path": ["auth","token","refresh",""]}
+      }
+    },
+    {
       "name": "Health",
       "request": {
         "method": "GET",
@@ -16,6 +38,7 @@
       "name": "Farms - List",
       "request": {
         "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
         "url": {"raw": "{{baseUrl}}/api/farms/", "host": ["{{baseUrl}}"], "path": ["api","farms",""]}
       }
     },
@@ -23,6 +46,7 @@
       "name": "Cows - List",
       "request": {
         "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
         "url": {"raw": "{{baseUrl}}/api/cows/", "host": ["{{baseUrl}}"], "path": ["api","cows",""]}
       }
     },
@@ -30,6 +54,7 @@
       "name": "Milk Records - List",
       "request": {
         "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
         "url": {"raw": "{{baseUrl}}/api/milk-records/", "host": ["{{baseUrl}}"], "path": ["api","milk-records",""]}
       }
     },
@@ -64,6 +89,8 @@
   ],
   "variable": [
     {"key": "baseUrl", "value": "http://127.0.0.1:8000"},
-    {"key": "reportUrl", "value": "http://127.0.0.1:8001"}
+  {"key": "reportUrl", "value": "http://127.0.0.1:8001"},
+  {"key": "accessToken", "value": ""},
+  {"key": "refreshToken", "value": ""}
   ]
 }
