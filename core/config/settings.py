@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-not-for-production')
-DEBUG = os.getenv('DJANGO_DEBUG', '1') == '1'
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if os.getenv('DJANGO_ALLOWED_HOSTS') else []
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='dev-secret-not-for-production')
+DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = [h for h in config('DJANGO_ALLOWED_HOSTS', default='').split(',') if h]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -53,11 +54,12 @@ ASGI_APPLICATION = 'config.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'farmhub'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', '1234'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'NAME': config('DB_NAME', default='farmhub'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD'),  # required, no default
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default=5432, cast=int),
+        'ATOMIC_REQUESTS': True,
     }
 }
 
