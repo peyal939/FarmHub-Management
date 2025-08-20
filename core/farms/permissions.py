@@ -1,4 +1,24 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from django.utils.functional import cached_property
+
+
+class IsSuperAdmin(BasePermission):
+    """
+    Allows access if the user's role is SUPERADMIN (or is_superuser).
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        # Treat Django superusers as super admins as well
+        if getattr(user, "is_superuser", False):
+            return True
+        role = getattr(user, "role", None)
+        return role == getattr(user.__class__, "Roles").SUPERADMIN
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
 
 
 class IsAgentAndOwner(BasePermission):
@@ -42,3 +62,10 @@ class IsAgentAndOwner(BasePermission):
         # For reads/writes, user must be the assigned agent on the farm object
         farm = obj
         return getattr(farm, "agent_id", None) == user.id
+
+
+class IsAgentAndFarmOwner(IsAgentAndOwner):
+    """
+    Alias for clarity matching step description. Same behavior as IsAgentAndOwner.
+    """
+    pass
