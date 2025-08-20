@@ -1,0 +1,69 @@
+{
+  "info": {
+    "name": "FarmHub API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw": "{{baseUrl}}/healthz/", "host": ["{{baseUrl}}"], "path": ["healthz",""]}
+      }
+    },
+    {
+      "name": "Farms - List",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{baseUrl}}/api/farms/", "host": ["{{baseUrl}}"], "path": ["api","farms",""]}
+      }
+    },
+    {
+      "name": "Cows - List",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{baseUrl}}/api/cows/", "host": ["{{baseUrl}}"], "path": ["api","cows",""]}
+      }
+    },
+    {
+      "name": "Milk Records - List",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{baseUrl}}/api/milk-records/", "host": ["{{baseUrl}}"], "path": ["api","milk-records",""]}
+      }
+    },
+    {
+      "name": "Reporting - Summary",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{reportUrl}}/summary", "host": ["{{reportUrl}}"], "path": ["summary"]}
+      }
+    },
+    {
+      "name": "Reporting - Farm Summary",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{reportUrl}}/reports/farm/1/summary", "host": ["{{reportUrl}}"], "path": ["reports","farm","1","summary"]}
+      }
+    },
+    {
+      "name": "Reporting - Farm Milk Production",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{reportUrl}}/reports/farm/1/milk-production", "host": ["{{reportUrl}}"], "path": ["reports","farm","1","milk-production"]}
+      }
+    },
+    {
+      "name": "Reporting - Farm Daily Milk",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{reportUrl}}/reports/farm/1/daily-milk", "host": ["{{reportUrl}}"], "path": ["reports","farm","1","daily-milk"]}
+      }
+    }
+  ],
+  "variable": [
+    {"key": "baseUrl", "value": "http://127.0.0.1:8000"},
+    {"key": "reportUrl", "value": "http://127.0.0.1:8001"}
+  ]
+}
