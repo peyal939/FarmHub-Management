@@ -35,25 +35,33 @@ class MilkRecordViewSet(viewsets.ModelViewSet):
         cow_id = self.request.data.get("cow_id")
         if role == getattr(user.__class__, "Roles").AGENT:
             from livestock.models import Cow
+
             if not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists():
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("You can only record milk for cows in your farms.")
+
+                raise PermissionDenied(
+                    "You can only record milk for cows in your farms."
+                )
             serializer.save()
             return
         if role == getattr(user.__class__, "Roles").FARMER:
             from farms.models import FarmerProfile
             from livestock.models import Cow
+
             try:
                 fp = FarmerProfile.objects.get(user_id=user.id)
             except FarmerProfile.DoesNotExist:
                 from rest_framework.exceptions import PermissionDenied
+
                 raise PermissionDenied("You do not have a farmer profile.")
             if not Cow.objects.filter(id=cow_id, owner_id=fp.id).exists():
                 from rest_framework.exceptions import PermissionDenied
+
                 raise PermissionDenied("You can only record milk for your own cows.")
             serializer.save()
             return
         from rest_framework.exceptions import PermissionDenied
+
         raise PermissionDenied("Not allowed to create milk records.")
 
     def perform_update(self, serializer):
@@ -65,23 +73,34 @@ class MilkRecordViewSet(viewsets.ModelViewSet):
         cow_id = self.request.data.get("cow_id")
         if role == getattr(user.__class__, "Roles").AGENT:
             from livestock.models import Cow
-            if cow_id and not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists():
+
+            if (
+                cow_id
+                and not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists()
+            ):
                 from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("You can only manage milk for cows in your farms.")
+
+                raise PermissionDenied(
+                    "You can only manage milk for cows in your farms."
+                )
             serializer.save()
             return
         if role == getattr(user.__class__, "Roles").FARMER:
             from farms.models import FarmerProfile
             from livestock.models import Cow
+
             try:
                 fp = FarmerProfile.objects.get(user_id=user.id)
             except FarmerProfile.DoesNotExist:
                 from rest_framework.exceptions import PermissionDenied
+
                 raise PermissionDenied("You do not have a farmer profile.")
             if cow_id and not Cow.objects.filter(id=cow_id, owner_id=fp.id).exists():
                 from rest_framework.exceptions import PermissionDenied
+
                 raise PermissionDenied("You can only manage milk for your own cows.")
             serializer.save()
             return
         from rest_framework.exceptions import PermissionDenied
+
         raise PermissionDenied("Not allowed to update milk records.")
