@@ -68,4 +68,5 @@ class IsAgentAndFarmOwner(IsAgentAndOwner):
     """
     Alias for clarity matching step description. Same behavior as IsAgentAndOwner.
     """
+
     pass

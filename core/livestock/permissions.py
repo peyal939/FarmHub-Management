@@ -15,8 +15,8 @@ class IsFarmerAndCowOwner(BasePermission):
     def _is_farmer(self, user):
         if not user or not user.is_authenticated:
             return False
-        role = getattr(user, 'role', None)
-        return role == getattr(user.__class__, 'Roles').FARMER
+        role = getattr(user, "role", None)
+        return role == getattr(user.__class__, "Roles").FARMER
 
     def has_permission(self, request, view):
         user = request.user
@@ -32,12 +32,13 @@ class IsFarmerAndCowOwner(BasePermission):
         try:
             from livestock.models import Cow, Activity
             from production.models import MilkRecord
-            if hasattr(obj, 'owner') and hasattr(obj, 'farm'):
+
+            if hasattr(obj, "owner") and hasattr(obj, "farm"):
                 # Cow
                 cow = obj
-            elif hasattr(obj, 'cow') and isinstance(obj, Activity):
+            elif hasattr(obj, "cow") and isinstance(obj, Activity):
                 cow = obj.cow
-            elif hasattr(obj, 'cow'):
+            elif hasattr(obj, "cow"):
                 # MilkRecord (has cow FK)
                 cow = obj.cow
         except Exception:
@@ -45,6 +46,6 @@ class IsFarmerAndCowOwner(BasePermission):
         if cow is None:
             return False
         # Check ownership
-        farmer_profile = getattr(cow, 'owner', None)
-        user_id = getattr(getattr(farmer_profile, 'user', None), 'id', None)
+        farmer_profile = getattr(cow, "owner", None)
+        user_id = getattr(getattr(farmer_profile, "user", None), "id", None)
         return user_id == user.id
