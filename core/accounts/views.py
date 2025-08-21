@@ -9,10 +9,10 @@ class IsSuperAdminOrStaff(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
             return True
         # Allow custom SUPERADMIN role as well
-        role = getattr(user, 'role', None)
+        role = getattr(user, "role", None)
         try:
             return role == user.Roles.SUPERADMIN
         except Exception:

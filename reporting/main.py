@@ -316,7 +316,8 @@ async def get_farmer_summary(
 
             if not farmer_row:
                 raise HTTPException(
-                    status_code=404, detail=f"Farmer profile for user {user_id} not found"
+                    status_code=404,
+                    detail=f"Farmer profile for user {user_id} not found",
                 )
 
             # Count cows owned by this farmer
@@ -380,16 +381,13 @@ class RecentActivity(BaseModel):
     "/reports/activities/recent",
     response_model=List[RecentActivity],
 )
-async def get_recent_activities(
-    farm_id: Optional[int] = None, limit: int = 20
-):
+async def get_recent_activities(farm_id: Optional[int] = None, limit: int = 20):
     """Get recent activities across the platform, optionally filtered by farm."""
 
     try:
         limit = max(1, min(limit, 200))  # clamp for safety
         with get_engine().connect() as connection:
-            base_sql = (
-                """
+            base_sql = """
                 SELECT a.id, a.date, a.type,
                        c.tag as cow_tag, c.breed as cow_breed,
                        f.id as farm_id, f.name as farm_name
@@ -400,7 +398,6 @@ async def get_recent_activities(
                 ORDER BY a.date DESC, a.id DESC
                 LIMIT :limit
                 """
-            )
             params = {"limit": limit}
             if farm_id is not None:
                 sql = text(base_sql.format(where="WHERE f.id = :farm_id"))
@@ -425,6 +422,7 @@ async def get_recent_activities(
         raise HTTPException(
             status_code=500, detail=f"Error retrieving recent activities: {str(e)}"
         )
+
 
 @app.get("/health")
 def health():
