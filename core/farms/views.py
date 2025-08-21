@@ -22,13 +22,37 @@ class FarmViewSet(viewsets.ModelViewSet):
         return qs.none()
 
     def perform_create(self, serializer):
+        """
+        Only allow:
+        - SuperAdmin/staff: create any farm and assign any agent.
+        - Agent: can create farms but only with themselves as agent (agent_id == request.user.id).
+        - Farmer/others: not allowed.
+        """
         user = self.request.user
-        # If agent creates a farm without specifying agent_id, set it to themselves
-        agent_id = self.request.data.get("agent_id")
-        if not agent_id and user.is_authenticated:
-            serializer.save(agent_id=user.id)
-        else:
-            serializer.save()
+        # Superadmin/staff bypass
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return serializer.save()
+
+        role = getattr(user, "role", None)
+        # Agent can create farm only for themselves
+        if role == getattr(user.__class__, "Roles").AGENT:
+            agent_id = self.request.data.get("agent_id")
+            # If not provided, force to self
+            if not agent_id:
+                return serializer.save(agent_id=user.id)
+            # If provided, must match self
+            if str(agent_id) != str(user.id):
+                from rest_framework.exceptions import PermissionDenied
+
+                raise PermissionDenied(
+                    "Agents can only create farms assigned to themselves."
+                )
+            return serializer.save()
+
+        # Farmers and others cannot create farms
+        from rest_framework.exceptions import PermissionDenied
+
+        raise PermissionDenied("Not allowed to create farms.")
 
 
 class FarmerProfileViewSet(viewsets.ModelViewSet):
