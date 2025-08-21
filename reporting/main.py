@@ -65,6 +65,15 @@ class GeneralSummaryResponse(BaseModel):
     total_milk_production: float
 
 
+class FarmerSummaryResponse(BaseModel):
+    farmer_user_id: int
+    farmer_username: str
+    farm_id: int
+    farm_name: str
+    total_cows: int
+    total_milk_production: float
+
+
 @app.get("/summary", response_model=GeneralSummaryResponse)
 async def get_general_summary():
     """Get overall system summary with totals across all farms."""
@@ -271,6 +280,151 @@ async def get_farm_daily_milk(
             status_code=500, detail=f"Error retrieving daily milk data: {str(e)}"
         )
 
+
+@app.get(
+    "/reports/farmer/{user_id}/summary",
+    response_model=FarmerSummaryResponse,
+)
+async def get_farmer_summary(
+    user_id: int, start_date: Optional[date] = None, end_date: Optional[date] = None
+):
+    """Get a farmer's summary: cows owned and total milk (optional date range)."""
+
+    try:
+        # Default date window to full range if not provided
+        if start_date is None:
+            start_date = date.min.replace(year=1970)
+        if end_date is None:
+            end_date = date.max.replace(year=9999)
+
+        with get_engine().connect() as connection:
+            # Find FarmerProfile and farm details for the given user
+            farmer_query = text(
+                """
+                SELECT fp.id as farmer_profile_id, f.id as farm_id, f.name as farm_name,
+                       u.username as username
+                FROM farms_farmerprofile fp
+                JOIN farms_farm f ON fp.farm_id = f.id
+                JOIN accounts_user u ON fp.user_id = u.id
+                WHERE fp.user_id = :user_id
+                LIMIT 1
+                """
+            )
+            farmer_row = connection.execute(
+                farmer_query, {"user_id": user_id}
+            ).fetchone()
+
+            if not farmer_row:
+                raise HTTPException(
+                    status_code=404, detail=f"Farmer profile for user {user_id} not found"
+                )
+
+            # Count cows owned by this farmer
+            cow_count_row = connection.execute(
+                text(
+                    """
+                    SELECT COUNT(*) AS cow_count
+                    FROM livestock_cow
+                    WHERE owner_id = :farmer_profile_id
+                    """
+                ),
+                {"farmer_profile_id": farmer_row.farmer_profile_id},
+            ).fetchone()
+
+            # Sum milk for cows owned by this farmer within date range
+            milk_sum_row = connection.execute(
+                text(
+                    """
+                    SELECT COALESCE(SUM(mr.liters), 0) AS total_milk
+                    FROM production_milkrecord mr
+                    JOIN livestock_cow c ON mr.cow_id = c.id
+                    WHERE c.owner_id = :farmer_profile_id
+                      AND mr.date >= :start_date AND mr.date <= :end_date
+                    """
+                ),
+                {
+                    "farmer_profile_id": farmer_row.farmer_profile_id,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                },
+            ).fetchone()
+
+            return FarmerSummaryResponse(
+                farmer_user_id=user_id,
+                farmer_username=farmer_row.username,
+                farm_id=farmer_row.farm_id,
+                farm_name=farmer_row.farm_name,
+                total_cows=cow_count_row.cow_count,
+                total_milk_production=float(milk_sum_row.total_milk),
+            )
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving farmer summary: {str(e)}"
+        )
+
+
+class RecentActivity(BaseModel):
+    id: int
+    date: date
+    type: str
+    cow_tag: str
+    cow_breed: str
+    farm_id: int
+    farm_name: str
+
+
+@app.get(
+    "/reports/activities/recent",
+    response_model=List[RecentActivity],
+)
+async def get_recent_activities(
+    farm_id: Optional[int] = None, limit: int = 20
+):
+    """Get recent activities across the platform, optionally filtered by farm."""
+
+    try:
+        limit = max(1, min(limit, 200))  # clamp for safety
+        with get_engine().connect() as connection:
+            base_sql = (
+                """
+                SELECT a.id, a.date, a.type,
+                       c.tag as cow_tag, c.breed as cow_breed,
+                       f.id as farm_id, f.name as farm_name
+                FROM livestock_activity a
+                JOIN livestock_cow c ON a.cow_id = c.id
+                JOIN farms_farm f ON c.farm_id = f.id
+                {where}
+                ORDER BY a.date DESC, a.id DESC
+                LIMIT :limit
+                """
+            )
+            params = {"limit": limit}
+            if farm_id is not None:
+                sql = text(base_sql.format(where="WHERE f.id = :farm_id"))
+                params["farm_id"] = farm_id
+            else:
+                sql = text(base_sql.format(where=""))
+
+            rows = connection.execute(sql, params).fetchall()
+            return [
+                RecentActivity(
+                    id=row.id,
+                    date=row.date,
+                    type=row.type,
+                    cow_tag=row.cow_tag,
+                    cow_breed=row.cow_breed,
+                    farm_id=row.farm_id,
+                    farm_name=row.farm_name,
+                )
+                for row in rows
+            ]
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving recent activities: {str(e)}"
+        )
 
 @app.get("/health")
 def health():

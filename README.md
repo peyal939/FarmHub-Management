@@ -168,6 +168,8 @@ Reporting (FastAPI)
 - GET /reports/farm/{farm_id}/summary — farmers, cows, total milk
 - GET /reports/farm/{farm_id}/milk-production — totals by cow
 - GET /reports/farm/{farm_id}/daily-milk — daily totals (date range optional)
+ - GET /reports/farmer/{user_id}/summary — farmer’s cows and total milk (optional date range)
+ - GET /reports/activities/recent — latest activities, optional farm_id and limit
 
 ---
 
@@ -180,6 +182,7 @@ Endpoints
 Usage
 - Add header to protected API calls: `Authorization: Bearer <access_token>`
 - DRF default permission is `IsAuthenticated` globally; viewsets add stricter role checks.
+- Users API is restricted to SuperAdmin/staff only; use Django Admin for general user management.
 
 Example (PowerShell, optional)
 

@@ -508,6 +508,53 @@
 					},
 					"response": []
 				}
+				,
+				{
+					"name": "Get Farmer Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{reporting_url}}/reports/farmer/1/summary",
+							"host": [
+								"{{reporting_url}}"
+							],
+							"path": [
+								"reports",
+								"farmer",
+								"1",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				}
+				,
+				{
+					"name": "Get Recent Activities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{reporting_url}}/reports/activities/recent?limit=10",
+							"host": [
+								"{{reporting_url}}"
+							],
+							"path": [
+								"reports",
+								"activities",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
 			]
 		}
       ],
