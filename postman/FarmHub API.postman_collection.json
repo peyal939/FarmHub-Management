@@ -229,15 +229,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/farms/",
-							"protocol": "http",
+							"raw": "{{core_url}}/api/farms/",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{core_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"api",
 								"farms",
@@ -336,7 +331,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"cow_id\": 3, \"date\": \"2025-08-22\", \"liters\": \"9.20\" }",
+							"raw": "{ \"cow_id\": 3, \"date\": \"2025-08-21\", \"liters\": 9.2 }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -374,7 +369,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"liters\": \"9.50\" }",
+							"raw": "{ \"liters\": 9.5 }",
 							"options": {
 								"raw": {
 									"language": "json"
