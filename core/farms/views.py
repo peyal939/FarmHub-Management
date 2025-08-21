@@ -2,13 +2,20 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Farm, FarmerProfile
 from .serializers import FarmSerializer, FarmerProfileSerializer
-from .permissions import IsAgentAndFarmOwner, IsSuperAdmin
+from .permissions import IsAgentAndFarmOwner, IsSuperAdmin, IsSuperAdminOrAgent
 
 
 class FarmViewSet(viewsets.ModelViewSet):
     queryset = Farm.objects.select_related("agent").all().order_by("name")
     serializer_class = FarmSerializer
     permission_classes = [IsAuthenticated, (IsSuperAdmin | IsAgentAndFarmOwner)]
+
+    def get_permissions(self):
+        """Tighten create/update/delete: only SuperAdmin or Agent allowed; block Farmers at permission layer."""
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [IsAuthenticated(), IsSuperAdminOrAgent()]
+        return super().get_permissions()
+
     def create(self, request, *args, **kwargs):
         """Extra guardrail to prevent Farmers from creating farms via serializer shortcuts."""
         user = request.user
@@ -84,9 +91,7 @@ class FarmViewSet(viewsets.ModelViewSet):
             if agent_id is not None and str(agent_id) != str(user.id):
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied(
-                    "Agents cannot reassign farms to other agents."
-                )
+                raise PermissionDenied("Agents cannot reassign farms to other agents.")
             return serializer.save()
         from rest_framework.exceptions import PermissionDenied
 
