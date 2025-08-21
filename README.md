@@ -204,12 +204,35 @@ Created by `accounts/migrations/0002_seed_initial_data.py` (if users don’t alr
 
 ## Postman Collection
 
-This repo includes an exported Postman collection at `postman/FarmHub.postman_collection.json` covering:
+This repo includes an exported Postman collection at `postman/FarmHub API.postman_collection.json` covering:
 - Auth (Obtain/Refresh) with tests capturing tokens into collection variables
 - Farms, Farmer Profiles, Cows, Activities, Milk Records (role-aware sample bodies)
-- Reporting endpoints
+- Reporting endpoints (incl. DB health)
 
-Import the collection, set `baseUrl`/`reportUrl` and username/password variables, run "Auth → Obtain Token", then exercise endpoints. Collection-level Bearer auth will use `{{accessToken}}` automatically.
+The provided collection is organized as:
+- 01 - Authentication
+- 02 - Role Scenarios (RBAC)
+- 03 - Core API Examples (CRUD)
+- 04 - Reporting API
+
+How to use it
+1) Import the file `postman/FarmHub API.postman_collection.json` into Postman.
+2) Create a Postman Environment (recommended) with:
+	- baseUrl = http://127.0.0.1:8000
+	- reportUrl = http://127.0.0.1:8001
+	- username/password for the role you want to test (e.g., farmer_sunamganj / Farmer@123)
+3) Obtain a JWT access token:
+	- Make a POST to `${baseUrl}/auth/token/` with body `{ "username": "<user>", "password": "<pass>" }`.
+	- Copy the `access` value and paste it into the Bearer Token auth for the requests you plan to run (tokens in the sample may be expired).
+	- To refresh, POST to `${baseUrl}/auth/token/refresh/` with body `{ "refresh": "<refresh>" }`.
+4) Run the scenarios in "02 - Role Scenarios (RBAC)" and "03 - Core API Examples (CRUD)" using a valid token for the correct role:
+	- SuperAdmin can create farms; Agent can create only for themselves; Farmer is forbidden from creating farms.
+	- Farmers can list their cows and manage only their own milk records.
+5) For "04 - Reporting API", ensure requests point to `${reportUrl}` for endpoints like `/summary`, `/reports/farm/{id}/summary`, `/health`, `/health/db`.
+
+Notes
+- Some requests in the collection may include placeholder IDs or previously captured tokens. Replace them with current values or environment variables as needed.
+- JWT access tokens expire; obtain a fresh token or use refresh when you get 401 errors.
 
 ---
 

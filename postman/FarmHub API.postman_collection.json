@@ -1,0 +1,345 @@
+{
+	"info": {
+		"_postman_id": "08f93012-9e85-4d0d-a483-7ef806b0f454",
+		"name": "FarmHub API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47718339",
+		"_collection_link": "https://peyal-939-574707.postman.co/workspace/Nahidul-Islam-Peyal's-Workspace~6e692980-2a8f-4801-8995-8959b8f0a49a/collection/47718339-08f93012-9e85-4d0d-a483-7ef806b0f454?action=share&source=collection_link&creator=47718339"
+	},
+	"item": [
+		{
+			"name": "01 - Authentication",
+			"item": [
+				{
+					"name": "Obtain SuperAdmin Token",
+					"request": {
+						"method": "POST",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Obtain Agent Token",
+					"request": {
+						"method": "POST",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Obtain Farmer Token",
+					"request": {
+						"method": "POST",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02 - Role Scenarios (RBAC)",
+			"item": [
+				{
+					"name": "[PASS] SuperAdmin Creates Farm",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1NzcxOTM0LCJpYXQiOjE3NTU3NzE2MzQsImp0aSI6IjdmNGFjMTAxYWI1ZDQyMzdhMjVkYzI1OTQ1ZjJmODczIiwidXNlcl9pZCI6IjIifQ.mdItIQgWGos9pKyJsKSAUDAVK-rZey4bGGAcnPK7cng\"",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"username\": \"superadmin\", \"password\": \"SuperAdmin@123\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/farms/\n\n",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"farms",
+								"\n\n"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[FAIL] Farmer Tries to Create Farm",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Nzc1MzgwLCJpYXQiOjE3NTU3NzUwODAsImp0aSI6IjE5NTJmNTAzMzZhYzRmNTU4NTBhZDAxOWJjZjA5NDU1IiwidXNlcl9pZCI6IjQifQ.jCpEObXj1XF8k1LfhI9ptn__9XoVyo2B96kRGJgWeWA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"Farmer's New Farm\", \"location\": \"Barisal, Bangladesh\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/farms/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"farms",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[PASS] Agent Creates a Farm for Themselves",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Nzc1NjMxLCJpYXQiOjE3NTU3NzUzMzEsImp0aSI6ImUwNTU2ZWUzMDQ3OTQ0MDZhZDA2N2UyM2I2OGRiYjkwIiwidXNlcl9pZCI6IjMifQ.BEkKuvKjCtSE1VmHGtW5rruaxu1yUDCxcsXHH07YPoI",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Agent's New Farm\",\r\n    \"location\": \"Khulna, Bangladesh\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/farms/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"farms",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03 - Core API Examples (CRUD)",
+			"item": [
+				{
+					"name": "Farmer Lists Their Cows",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Nzc1NzA0LCJpYXQiOjE3NTU3NzU0MDQsImp0aSI6Ijg2MDYyMTQ1ZTA2NjQ3ZTY5NWQ0NTYxNjQzM2RjODU1IiwidXNlcl9pZCI6IjQifQ.xziaBkN-Itv1GbZFyhCGiXjM5f8n6dySkCt_h-JqLXY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/cows/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"cows",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Farmer Adds a Milk Record",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Nzc1NzA0LCJpYXQiOjE3NTU3NzU0MDQsImp0aSI6Ijg2MDYyMTQ1ZTA2NjQ3ZTY5NWQ0NTYxNjQzM2RjODU1IiwidXNlcl9pZCI6IjQifQ.xziaBkN-Itv1GbZFyhCGiXjM5f8n6dySkCt_h-JqLXY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"cow_id\": 1, \"date\": \"2025-08-22\", \"liters\": \"9.20\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/milk-records/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"milk-records",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Farmer Updates a Milk Record",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Nzc1NzA0LCJpYXQiOjE3NTU3NzU0MDQsImp0aSI6Ijg2MDYyMTQ1ZTA2NjQ3ZTY5NWQ0NTYxNjQzM2RjODU1IiwidXNlcl9pZCI6IjQifQ.xziaBkN-Itv1GbZFyhCGiXjM5f8n6dySkCt_h-JqLXY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"liters\": \"9.50\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/milk-records/1/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"milk-records",
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04 - Reporting API",
+			"item": [
+				{
+					"name": "Get General Summary",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get Farm Specific Summary",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get Farm Daily Milk",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get Health Check",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get DB Table Counts",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
