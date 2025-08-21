@@ -16,7 +16,7 @@ class CowViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = Cow.objects.select_related("farm", "owner").all()
         user = self.request.user
         # Superusers/staff see all
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
