@@ -155,7 +155,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        # Explicit base queryset to ensure select_related always applies
+        qs = Activity.objects.select_related("cow").all()
         user = self.request.user
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
             return qs
