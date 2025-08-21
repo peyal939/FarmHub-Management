@@ -1,10 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from decouple import config
+from decouple import AutoConfig
 from sqlalchemy import create_engine, text
 from datetime import datetime, date, timedelta
 from typing import List, Optional
+from pathlib import Path
 
+
+# Ensure we can read the .env from the repo root even when running from the reporting folder
+REPO_ROOT = Path(__file__).resolve().parents[1]
+config = AutoConfig(search_path=str(REPO_ROOT))
 
 DB_NAME = config("DB_NAME", default="farmhub")
 DB_USER = config("DB_USER", default="postgres")
@@ -12,12 +17,17 @@ DB_PASSWORD = config("DB_PASSWORD")
 DB_HOST = config("DB_HOST", default="localhost")
 DB_PORT = config("DB_PORT", cast=int, default=5432)
 
-DATABASE_URL = (
-    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# Read-only note: use a DB user with only SELECT privileges for this service.
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+# Lazily create the engine so startup doesn't fail if env isn't loaded yet.
+_engine = None
+
+def get_engine():
+    global _engine
+    if _engine is None:
+        # Read-only note: use a DB user with only SELECT privileges for this service.
+        _engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+    return _engine
 
 app = FastAPI(title="FarmHub Reporting Service", version="0.1.0")
 
@@ -56,7 +66,7 @@ async def get_general_summary():
     """Get overall system summary with totals across all farms."""
 
     try:
-        with engine.connect() as connection:
+        with get_engine().connect() as connection:
             # Count total farms
             farms_query = text("SELECT COUNT(*) as farm_count FROM farms_farm")
             farms_result = connection.execute(farms_query).fetchone()
@@ -95,7 +105,7 @@ async def get_farm_summary(farm_id: int):
     """Get comprehensive summary for a specific farm including farmers, cows, and milk production."""
 
     try:
-        with engine.connect() as connection:
+        with get_engine().connect() as connection:
             # Query farm details
             farm_query = text(
                 """
@@ -174,7 +184,7 @@ async def get_farm_milk_production(farm_id: int):
     """Get milk production breakdown by cow for a specific farm."""
 
     try:
-        with engine.connect() as connection:
+        with get_engine().connect() as connection:
             query = text(
                 """
                 SELECT 
@@ -221,7 +231,7 @@ async def get_farm_daily_milk(
         if not end_date:
             end_date = datetime.now().date()
 
-        with engine.connect() as connection:
+        with get_engine().connect() as connection:
             query = text(
                 """
                 SELECT 
@@ -263,10 +273,21 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/health/db")
+def health_db():
+    """Lightweight DB connectivity check for diagnostics."""
+    try:
+        with get_engine().connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"db_error: {e}")
+
+
 @app.get("/report/summary")
 def summary():
     """Simple aggregated counts. Expand later with proper ORM models."""
-    with engine.connect() as conn:
+    with get_engine().connect() as conn:
         counts = {}
         for table in [
             "accounts_user",
