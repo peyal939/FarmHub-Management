@@ -73,15 +73,17 @@ class IsAgentAndFarmOwner(IsAgentAndOwner):
 
 
 class IsSuperAdminOrAgent(BasePermission):
-    """Allow only SuperAdmin/staff or users with role=AGENT."""
+    """Allow only SuperAdmin (role or superuser) or users with role=AGENT."""
 
     def has_permission(self, request, view):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+        if getattr(user, "is_superuser", False):
             return True
         role = getattr(user, "role", None)
+        if role == getattr(user.__class__, "Roles").SUPERADMIN:
+            return True
         return role == getattr(user.__class__, "Roles").AGENT
 
     def has_object_permission(self, request, view, obj):
