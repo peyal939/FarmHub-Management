@@ -516,16 +516,65 @@
 				{
 					"name": "Get Farmer Summary",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "{{reporting_url}}/reports/farmer/4/summary",
+							"host": [
+								"{{reporting_url}}"
+							],
+							"path": [
+								"reports",
+								"farmer",
+								"4",
+								"summary"
+							]
+						}
 					},
 					"response": []
 				},
 				{
 					"name": "Get Recent Activities",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "{{reporting_url}}/reports/activities/recent?limit=10",
+							"host": [
+								"{{reporting_url}}"
+							],
+							"path": [
+								"reports",
+								"activities",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
 					},
 					"response": []
 				}
