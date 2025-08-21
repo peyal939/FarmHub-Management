@@ -39,7 +39,8 @@ class FarmViewSet(viewsets.ModelViewSet):
         raise PermissionDenied("Not allowed to create farms.")
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        # Explicit base queryset to ensure select_related always applies
+        qs = Farm.objects.select_related("agent").all().order_by("name")
         user = self.request.user
         # Superuser/SUPERADMIN see all; agents see only their farms; others see none
         if (
@@ -114,7 +115,8 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        # Explicit base queryset to ensure select_related always applies
+        qs = FarmerProfile.objects.select_related("user", "farm").all()
         user = self.request.user
         # Superusers/staff see all
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
