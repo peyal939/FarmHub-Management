@@ -13,8 +13,43 @@
 				{
 					"name": "Obtain SuperAdmin Token",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1NzcyNDQ5LCJpYXQiOjE3NTU3NzIxNDksImp0aSI6ImJhMTRlZWNlMTk5MjQ3ZTA5YTgwYzk2MzcxMzcyMWRkIiwidXNlcl9pZCI6IjIifQ.9snU2Urjn-b-KOLpvX2dW3ylGDN1tbfsB_pOkouJZco\"",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
-						"header": []
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"superadmin\",\r\n    \"password\": \"SuperAdmin@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/auth/token/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"auth",
+								"token",
+								""
+							]
+						}
 					},
 					"response": []
 				},
@@ -22,7 +57,32 @@
 					"name": "Obtain Agent Token",
 					"request": {
 						"method": "POST",
-						"header": []
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"username\": \"agent_rajshahi\", \"password\": \"Agent@123\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/auth/token/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"auth",
+								"token",
+								""
+							]
+						}
 					},
 					"response": []
 				},
@@ -30,7 +90,32 @@
 					"name": "Obtain Farmer Token",
 					"request": {
 						"method": "POST",
-						"header": []
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"username\": \"farmer_sunamganj\", \"password\": \"Farmer@123\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/auth/token/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"auth",
+								"token",
+								""
+							]
+						}
 					},
 					"response": []
 				}
@@ -47,7 +132,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1NzcxOTM0LCJpYXQiOjE3NTU3NzE2MzQsImp0aSI6IjdmNGFjMTAxYWI1ZDQyMzdhMjVkYzI1OTQ1ZjJmODczIiwidXNlcl9pZCI6IjIifQ.mdItIQgWGos9pKyJsKSAUDAVK-rZey4bGGAcnPK7cng\"",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1NzcyNjQ1LCJpYXQiOjE3NTU3NzIzNDUsImp0aSI6ImQ3MzJjYTE3ZGZiMzRjYzVhNzQ1M2FkYzQ1ZDk0YTdlIiwidXNlcl9pZCI6IjIifQ.yVzVFKW-gBKNbLWoi_gzTya3NN5d1ym5LOOOmHxW0n8",
 									"type": "string"
 								}
 							]
@@ -56,7 +141,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"username\": \"superadmin\", \"password\": \"SuperAdmin@123\" }",
+							"raw": "{\r\n    \"name\": \"Admin's New Farm\",\r\n    \"location\": \"Sylhet, Bangladesh\",\r\n    \"agent_id\": 3\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -64,7 +149,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/farms/\n\n",
+							"raw": "http://127.0.0.1:8000/api/farms/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -76,7 +161,7 @@
 							"path": [
 								"api",
 								"farms",
-								"\n\n"
+								""
 							]
 						}
 					},
@@ -303,7 +388,21 @@
 					"name": "Get General Summary",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8001/summary",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"summary"
+							]
+						}
 					},
 					"response": []
 				},
@@ -311,7 +410,24 @@
 					"name": "Get Farm Specific Summary",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8001/reports/farm/1/summary",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"reports",
+								"farm",
+								"1",
+								"summary"
+							]
+						}
 					},
 					"response": []
 				},
@@ -319,7 +435,24 @@
 					"name": "Get Farm Daily Milk",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8001/reports/farm/1/daily-milk",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"reports",
+								"farm",
+								"1",
+								"daily-milk"
+							]
+						}
 					},
 					"response": []
 				},
@@ -327,7 +460,21 @@
 					"name": "Get Health Check",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8001/health",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"health"
+							]
+						}
 					},
 					"response": []
 				},
@@ -335,7 +482,47 @@
 					"name": "Get DB Table Counts",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8001/report/summary",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"report",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Farm Milk Production by Cow",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8001/reports/farm/1/milk-production",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"reports",
+								"farm",
+								"1",
+								"milk-production"
+							]
+						}
 					},
 					"response": []
 				}

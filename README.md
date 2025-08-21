@@ -204,10 +204,20 @@ Created by `accounts/migrations/0002_seed_initial_data.py` (if users don’t alr
 
 ## Postman Collection
 
-This repo includes an exported Postman collection at `postman/FarmHub API.postman_collection.json` covering:
-- Auth (Obtain/Refresh) with tests capturing tokens into collection variables
-- Farms, Farmer Profiles, Cows, Activities, Milk Records (role-aware sample bodies)
-- Reporting endpoints (incl. DB health)
+
+This repo includes an exported Postman collection at `postman/FarmHub API.postman_collection.json` with:
+- 01 - Authentication: obtain JWT tokens for SuperAdmin, Agent, and Farmer
+- 02 - Role Scenarios (RBAC): sample PASS/FAIL requests demonstrating access rules (e.g., Farmer cannot create Farm)
+- 03 - Core API Examples (CRUD): common endpoints for cows, milk records, etc.
+- 04 - Reporting API: summary, farm summary, daily milk, milk production
+
+Usage
+- Import `postman/FarmHub API.postman_collection.json` into Postman.
+- Run the requests under "01 - Authentication" to obtain fresh tokens (responses include `access` and `refresh`).
+- Many example requests in folders 02/03 include an Authorization bearer token field. These are examples and may be expired; replace them with your fresh `access` token from step above (Authorization tab → Type: Bearer Token).
+- URLs in the collection are pinned to `http://127.0.0.1:8000` (core) and `http://127.0.0.1:8001` (reporting). If you run on a different host/port, update the request URLs in Postman accordingly.
+
+Tip (optional): To avoid pasting tokens repeatedly, you can set a collection variable named `accessToken` and change Authorization to "Bearer {{accessToken}}" on requests in your local Postman.
 
 The provided collection is organized as:
 - 01 - Authentication
