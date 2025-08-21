@@ -213,11 +213,13 @@ This repo includes an exported Postman collection at `postman/FarmHub API.postma
 
 Usage
 - Import `postman/FarmHub API.postman_collection.json` into Postman.
-- Run the requests under "01 - Authentication" to obtain fresh tokens (responses include `access` and `refresh`).
-- Many example requests in folders 02/03 include an Authorization bearer token field. These are examples and may be expired; replace them with your fresh `access` token from step above (Authorization tab → Type: Bearer Token).
-- URLs in the collection are pinned to `http://127.0.0.1:8000` (core) and `http://127.0.0.1:8001` (reporting). If you run on a different host/port, update the request URLs in Postman accordingly.
-
-Tip (optional): To avoid pasting tokens repeatedly, you can set a collection variable named `accessToken` and change Authorization to "Bearer {{accessToken}}" on requests in your local Postman.
+- The collection is parameterized. Collection variables:
+	- `core_url` (default: http://127.0.0.1:8000)
+	- `reporting_url` (default: http://127.0.0.1:8001)
+	Adjust them at the collection level if your host/ports differ.
+- Run the three requests under "01 - Authentication". Each test saves the returned access token to a collection variable:
+	- `superAdminToken`, `agentToken`, `farmerToken`
+- Requests in folders 02/03 use these variables via Bearer auth automatically (no manual pasting).
 
 The provided collection is organized as:
 - 01 - Authentication
@@ -227,22 +229,14 @@ The provided collection is organized as:
 
 How to use it
 1) Import the file `postman/FarmHub API.postman_collection.json` into Postman.
-2) Create a Postman Environment (recommended) with:
-	- baseUrl = http://127.0.0.1:8000
-	- reportUrl = http://127.0.0.1:8001
-	- username/password for the role you want to test (e.g., farmer_sunamganj / Farmer@123)
-3) Obtain a JWT access token:
-	- Make a POST to `${baseUrl}/auth/token/` with body `{ "username": "<user>", "password": "<pass>" }`.
-	- Copy the `access` value and paste it into the Bearer Token auth for the requests you plan to run (tokens in the sample may be expired).
-	- To refresh, POST to `${baseUrl}/auth/token/refresh/` with body `{ "refresh": "<refresh>" }`.
-4) Run the scenarios in "02 - Role Scenarios (RBAC)" and "03 - Core API Examples (CRUD)" using a valid token for the correct role:
-	- SuperAdmin can create farms; Agent can create only for themselves; Farmer is forbidden from creating farms.
-	- Farmers can list their cows and manage only their own milk records.
-5) For "04 - Reporting API", ensure requests point to `${reportUrl}` for endpoints like `/summary`, `/reports/farm/{id}/summary`, `/health`, `/health/db`.
+2) If needed, set collection variables: `core_url` and `reporting_url` to match your runtime.
+3) Run the login requests in "01 - Authentication". Tokens are captured automatically into `superAdminToken`, `agentToken`, `farmerToken`.
+4) Run the scenarios in "02 - Role Scenarios (RBAC)" and "03 - Core API Examples (CRUD)"; they reference the captured tokens.
+5) "04 - Reporting API" uses `{{reporting_url}}` for `/summary`, `/reports/farm/{id}/summary`, `/health`, etc.
 
 Notes
-- Some requests in the collection may include placeholder IDs or previously captured tokens. Replace them with current values or environment variables as needed.
-- JWT access tokens expire; obtain a fresh token or use refresh when you get 401 errors.
+- Some requests use sample IDs; adjust IDs to match your data if needed.
+- If you get 401, re-run the relevant login to refresh the token variables.
 
 ---
 
