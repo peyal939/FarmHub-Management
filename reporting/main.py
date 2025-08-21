@@ -17,10 +17,13 @@ DB_PASSWORD = config("DB_PASSWORD")
 DB_HOST = config("DB_HOST", default="localhost")
 DB_PORT = config("DB_PORT", cast=int, default=5432)
 
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = (
+    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 # Lazily create the engine so startup doesn't fail if env isn't loaded yet.
 _engine = None
+
 
 def get_engine():
     global _engine
@@ -28,6 +31,7 @@ def get_engine():
         # Read-only note: use a DB user with only SELECT privileges for this service.
         _engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
     return _engine
+
 
 app = FastAPI(title="FarmHub Reporting Service", version="0.1.0")
 
