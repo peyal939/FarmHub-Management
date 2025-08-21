@@ -229,10 +229,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{core_url}}/api/farms/",
+							"raw": "http://127.0.0.1:8000/api/farms/",
+							"protocol": "http",
 							"host": [
-								"{{core_url}}"
+								"127",
+								"0",
+								"0",
+								"1"
 							],
+							"port": "8000",
 							"path": [
 								"api",
 								"farms",
@@ -331,7 +336,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"cow_id\": 3, \"date\": \"2025-08-21\", \"liters\": 9.2 }",
+							"raw": "{ \"cow_id\": 3, \"date\": \"2025-08-22\", \"liters\": \"9.20\" }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -369,7 +374,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"liters\": 9.5 }",
+							"raw": "{ \"liters\": \"9.50\" }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -507,19 +512,27 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get Farmer Summary",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Activities",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
 				}
 			]
 		}
-      ],
-      "variable": [
-	      {
-		      "key": "core_url",
-		      "value": "http://127.0.0.1:8000"
-	      },
-	      {
-		      "key": "reporting_url",
-		      "value": "http://127.0.0.1:8001"
-	      },
+	],
+	"variable": [
 		{
 			"key": "superAdminToken",
 			"value": ""
