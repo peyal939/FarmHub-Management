@@ -2,13 +2,39 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Farm, FarmerProfile
 from .serializers import FarmSerializer, FarmerProfileSerializer
-from .permissions import IsAgentAndFarmOwner, IsSuperAdmin
+from .permissions import IsAgentAndFarmOwner, IsSuperAdmin, IsSuperAdminOrAgent
 
 
 class FarmViewSet(viewsets.ModelViewSet):
     queryset = Farm.objects.select_related("agent").all().order_by("name")
     serializer_class = FarmSerializer
     permission_classes = [IsAuthenticated, (IsSuperAdmin | IsAgentAndFarmOwner)]
+
+    def get_permissions(self):
+        """Tighten create/update/delete: only SuperAdmin or Agent allowed; block Farmers at permission layer."""
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [IsAuthenticated(), IsSuperAdminOrAgent()]
+        return super().get_permissions()
+
+    def create(self, request, *args, **kwargs):
+        """Extra guardrail to prevent Farmers from creating farms via serializer shortcuts."""
+        user = request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return super().create(request, *args, **kwargs)
+        role = getattr(user, "role", None)
+        if role == getattr(user.__class__, "Roles").AGENT:
+            # If agent passes a different agent_id, block here early
+            agent_id = request.data.get("agent_id")
+            if agent_id is not None and str(agent_id) != str(user.id):
+                from rest_framework.exceptions import PermissionDenied
+
+                raise PermissionDenied(
+                    "Agents can only create farms assigned to themselves."
+                )
+            return super().create(request, *args, **kwargs)
+        from rest_framework.exceptions import PermissionDenied
+
+        raise PermissionDenied("Not allowed to create farms.")
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -53,6 +79,23 @@ class FarmViewSet(viewsets.ModelViewSet):
         from rest_framework.exceptions import PermissionDenied
 
         raise PermissionDenied("Not allowed to create farms.")
+
+    def perform_update(self, serializer):
+        """Prevent agents from reassigning a farm to a different agent."""
+        user = self.request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return serializer.save()
+        role = getattr(user, "role", None)
+        if role == getattr(user.__class__, "Roles").AGENT:
+            agent_id = self.request.data.get("agent_id")
+            if agent_id is not None and str(agent_id) != str(user.id):
+                from rest_framework.exceptions import PermissionDenied
+
+                raise PermissionDenied("Agents cannot reassign farms to other agents.")
+            return serializer.save()
+        from rest_framework.exceptions import PermissionDenied
+
+        raise PermissionDenied("Not allowed to update farms.")
 
 
 class FarmerProfileViewSet(viewsets.ModelViewSet):
