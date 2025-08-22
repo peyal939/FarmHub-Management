@@ -28,7 +28,6 @@ class FarmSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        """Central RBAC validation for create/update on Farm."""
         request = self.context.get("request")
         user = getattr(request, "user", None)
         if user is None or not getattr(user, "is_authenticated", False):
@@ -37,11 +36,9 @@ class FarmSerializer(serializers.ModelSerializer):
         Roles = getattr(user.__class__, "Roles", None)
         creating = self.instance is None
 
-        # Superadmin bypass
         if getattr(user, "is_superuser", False) or (Roles and role == Roles.SUPERADMIN):
             return attrs
 
-        # Agent rules
         if Roles and role == Roles.AGENT:
             agent_id = attrs.pop("agent_id", None)
             if creating:
@@ -58,7 +55,6 @@ class FarmSerializer(serializers.ModelSerializer):
                     )
             return attrs
 
-        # Farmers / others blocked
         from rest_framework.exceptions import PermissionDenied
 
         raise PermissionDenied("Not allowed to create or modify farms.")
@@ -99,7 +95,6 @@ class FarmerProfileSerializer(serializers.ModelSerializer):
         Roles = getattr(user.__class__, "Roles", None)
         creating = self.instance is None
 
-        # Superadmin/staff bypass
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
             return attrs
 
@@ -118,7 +113,6 @@ class FarmerProfileSerializer(serializers.ModelSerializer):
                 )
             return attrs
 
-        # Farmers cannot create/update profiles themselves
         if creating:
             from rest_framework.exceptions import PermissionDenied
 

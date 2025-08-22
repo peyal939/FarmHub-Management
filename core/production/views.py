@@ -2,7 +2,6 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-
 from .models import MilkRecord
 from .serializers import MilkRecordSerializer
 from livestock.permissions import IsFarmerAndCowOwner, IsAgentForRelatedFarm
@@ -20,7 +19,6 @@ class MilkRecordViewSet(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        # Explicit base queryset to ensure select_related always applies
         qs = MilkRecord.objects.select_related("cow").all().order_by("-date")
         user = self.request.user
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
@@ -115,14 +113,6 @@ class MilkRecordViewSet(viewsets.ModelViewSet):
         return Response({"message": "Milk record updated", "data": serializer.data})
 
     def list(self, request, *args, **kwargs):
-        """List milk records with optional filtering.
-
-        Query Params:
-          - cow_id: int (restrict to a single cow)
-          - date_from: YYYY-MM-DD (inclusive lower bound)
-          - date_to: YYYY-MM-DD (inclusive upper bound)
-        The base queryset is already role-scoped in get_queryset.
-        """
         queryset = self.get_queryset()
         cow_id = request.query_params.get("cow_id")
         date_from = request.query_params.get("date_from")

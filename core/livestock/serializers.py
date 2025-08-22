@@ -6,7 +6,6 @@ from farms.serializers import FarmSerializer
 class CowSerializer(serializers.ModelSerializer):
     farm = FarmSerializer(read_only=True)
     farm_id = serializers.IntegerField(write_only=True)
-    # Make owner_id optional so Farmers don't need to send it (it will be injected in perform_create)
     owner_id = serializers.IntegerField(
         write_only=True, required=False, allow_null=True
     )

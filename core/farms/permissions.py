@@ -3,9 +3,6 @@ from django.utils.functional import cached_property
 
 
 class IsSuperAdmin(BasePermission):
-    """
-    Allows access if the user's role is SUPERADMIN (or is_superuser).
-    """
 
     def has_permission(self, request, view):
         user = request.user
@@ -22,12 +19,6 @@ class IsSuperAdmin(BasePermission):
 
 
 class IsAgentAndOwner(BasePermission):
-    """
-    Allows access only to users with role=AGENT who are assigned to the Farm being accessed.
-    - SAFE_METHODS (GET, HEAD, OPTIONS): agent can access only farms where they are the assigned agent.
-    - For write methods (POST, PUT, PATCH, DELETE): agent must be assigned to the specific farm (or, for create, agent_id must equal request.user.id if provided).
-    Superusers/staff are allowed to pass for simplicity; adjust per policy.
-    """
 
     message = "You must be the assigned Agent for this farm."
 
@@ -65,15 +56,10 @@ class IsAgentAndOwner(BasePermission):
 
 
 class IsAgentAndFarmOwner(IsAgentAndOwner):
-    """
-    Alias for clarity matching step description. Same behavior as IsAgentAndOwner.
-    """
-
     pass
 
 
 class IsSuperAdminOrAgent(BasePermission):
-    """Allow only SuperAdmin (role or superuser) or users with role=AGENT."""
 
     def has_permission(self, request, view):
         user = request.user

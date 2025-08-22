@@ -7,12 +7,6 @@ from .serializers import FarmSerializer, FarmerProfileSerializer
 
 
 class FarmRBACPermission(BasePermission):
-    """Central permission logic for Farm operations.
-
-    - Read: authenticated users; queryset further scopes results.
-    - Write (create/update/delete): only SuperAdmin or Agent.
-    - Object-level write: Agent only if they are the assigned agent.
-    """
 
     def has_permission(self, request, view):
         user = request.user
@@ -52,8 +46,6 @@ class FarmViewSet(viewsets.ModelViewSet):
         if user.is_authenticated and Roles and role == Roles.AGENT:
             return qs.filter(agent_id=user.id)
         return qs.none()
-
-    # create/update/delete logic enforced by permission + serializer; explicit methods add response envelope
 
     def create(self, request, *args, **kwargs):  # type: ignore[override]
         serializer = self.get_serializer(data=request.data)
@@ -97,8 +89,6 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
         if Roles and role == Roles.FARMER:
             return qs.filter(user_id=user.id)
         return qs.none()
-
-    # create/update constraints are enforced within serializer validation; explicit response wrappers below
 
     def create(self, request, *args, **kwargs):  # type: ignore[override]
         serializer = self.get_serializer(data=request.data)

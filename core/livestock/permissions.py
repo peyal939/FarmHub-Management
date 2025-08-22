@@ -2,10 +2,6 @@ from rest_framework.permissions import BasePermission
 
 
 class IsAgentForRelatedFarm(BasePermission):
-    """
-    Allows access if the user's role is AGENT and the object (Cow/Activity/MilkRecord)
-    belongs to a farm managed by that agent.
-    """
 
     message = "You must be the assigned Agent for this farm."
 
@@ -55,13 +51,6 @@ class IsAgentForRelatedFarm(BasePermission):
 
 
 class IsFarmerAndCowOwner(BasePermission):
-    """
-    Allows access if the user's role is FARMER and the cow/activity/milk record belongs to them.
-    Assumes:
-      - Cow has owner -> FarmerProfile -> user
-      - Activity has cow FK
-      - MilkRecord checked at its own view via cow relation
-    """
 
     message = "You must be the owner (Farmer) of this cow or related record."
 
