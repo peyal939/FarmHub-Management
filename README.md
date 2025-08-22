@@ -183,14 +183,7 @@ Variables (defaults): `core_url` = http://localhost:8000, `reporting_url` = http
 - Migration race (first up): Restart web if DB wasn’t ready (compose handles via dependency, usually fine).
 - Schema change in dev: `docker compose exec web python core/manage.py migrate` (or rebuild).
 
-## 15. Possible Next Enhancements
-- Add `recorded_by` to `MilkRecord` for provenance
-- Global search/filter backends in DRF
-- Caching layer for heavy reporting queries
-- Async task queue for large imports
- - Add automated test suite & CI (pytest + coverage)
-
-## 16. License
+## 15. License
 MIT (adjust as needed).
 
 
