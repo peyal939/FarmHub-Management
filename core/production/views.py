@@ -1,10 +1,14 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+
 from .models import MilkRecord
 from .serializers import MilkRecordSerializer
 from livestock.permissions import IsFarmerAndCowOwner, IsAgentForRelatedFarm
 from farms.permissions import IsSuperAdmin
+from farms.models import FarmerProfile
+from livestock.models import Cow
 
 
 class MilkRecordViewSet(viewsets.ModelViewSet):
@@ -28,84 +32,87 @@ class MilkRecordViewSet(viewsets.ModelViewSet):
             return qs.filter(cow__owner__user_id=user.id)
         return qs.none()
 
-    def perform_create(self, serializer):
-        user = self.request.user
+    def create(self, request, *args, **kwargs):  # type: ignore[override]
+        user = request.user
         role = getattr(user, "role", None)
+        Roles = getattr(user.__class__, "Roles", None)
+        cow_id = request.data.get("cow_id")
+
+        # Superusers/staff pass-through
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
-            return
-        cow_id = self.request.data.get("cow_id")
-        if role == getattr(user.__class__, "Roles").AGENT:
-            from livestock.models import Cow
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                {"message": "Milk record created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
 
+        if Roles and role == Roles.AGENT:
             if not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists():
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied(
                     "You can only record milk for cows in your farms."
                 )
-            serializer.save()
-            return
-        if role == getattr(user.__class__, "Roles").FARMER:
-            from farms.models import FarmerProfile
-            from livestock.models import Cow
-
+        elif Roles and role == Roles.FARMER:
             try:
                 fp = FarmerProfile.objects.get(user_id=user.id)
             except FarmerProfile.DoesNotExist:
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You do not have a farmer profile.")
             if not Cow.objects.filter(id=cow_id, owner_id=fp.id).exists():
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You can only record milk for your own cows.")
-            serializer.save()
-            return
-        from rest_framework.exceptions import PermissionDenied
+        else:
+            raise PermissionDenied("Not allowed to create milk records.")
 
-        raise PermissionDenied("Not allowed to create milk records.")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {"message": "Milk record created", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
 
-    def perform_update(self, serializer):
-        user = self.request.user
+    def update(self, request, *args, **kwargs):  # type: ignore[override]
+        user = request.user
         role = getattr(user, "role", None)
-        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
-            serializer.save()
-            return
-        cow_id = self.request.data.get("cow_id")
-        if role == getattr(user.__class__, "Roles").AGENT:
-            from livestock.models import Cow
+        Roles = getattr(user.__class__, "Roles", None)
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        cow_id = request.data.get("cow_id")
 
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({"message": "Milk record updated", "data": serializer.data})
+
+        if Roles and role == Roles.AGENT:
             if (
                 cow_id
                 and not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists()
             ):
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied(
                     "You can only manage milk for cows in your farms."
                 )
-            serializer.save()
-            return
-        if role == getattr(user.__class__, "Roles").FARMER:
-            from farms.models import FarmerProfile
-            from livestock.models import Cow
-
+        elif Roles and role == Roles.FARMER:
             try:
                 fp = FarmerProfile.objects.get(user_id=user.id)
             except FarmerProfile.DoesNotExist:
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You do not have a farmer profile.")
             if cow_id and not Cow.objects.filter(id=cow_id, owner_id=fp.id).exists():
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You can only manage milk for your own cows.")
-            serializer.save()
-            return
-        from rest_framework.exceptions import PermissionDenied
+        else:
+            raise PermissionDenied("Not allowed to update milk records.")
 
-        raise PermissionDenied("Not allowed to update milk records.")
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"message": "Milk record updated", "data": serializer.data})
 
     def list(self, request, *args, **kwargs):
         """List milk records with optional filtering.
