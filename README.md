@@ -1,257 +1,178 @@
-# FarmHub — Management Platform
+<div align="center">
 
-FarmHub is a modular farm management platform built with Django REST Framework (core API) and FastAPI (read-only reporting). It uses PostgreSQL as the only database and implements role-based access control for SuperAdmin, Agent, and Farmer.
+# FarmHub
 
-## Contents
-- Project Overview
-- Tech Stack and Roles
-- Data Model
-- Local Setup (Windows/Powershell)
-- Running the Services
-- Environment Variables
-- API Endpoints (examples)
-- Seed Data
-- Postman Collection
-- Troubleshooting
+End‑to‑end farm management (Django + DRF) with a read‑only reporting service (FastAPI). PostgreSQL only. Fully role‑aware (SUPERADMIN / AGENT / FARMER) with secure CRUD + aggregate reports.
 
----
+</div>
 
-## Project Overview
+## 1. Why This Project (Interview Context)
+Demonstrates: clean data model, enforced RBAC, consistent API design, admin usability, reporting separation, containerized deployment.
 
-Core features
-- Farm management (assign Agent to Farm)
-- Farmer onboarding (FarmerProfile per User)
-- Cow management per Farm and Farmer
-- Activities (vaccination, birth, health, other)
-- Milk production tracking and aggregations
-
-Services
-- core/ — Django + DRF CRUD API with RBAC
-- reporting/ — FastAPI read-only service (aggregations)
-
-Strict rule: PostgreSQL only (DB name: `farmhub`).
-
----
-
-## Tech Stack and Roles
-
-- Backend: Django 5 + DRF
-- Reporting: FastAPI + SQLAlchemy
-- DB: PostgreSQL
-- Auth: JWT (SimpleJWT) with DRF default IsAuthenticated
-
-User roles
-- SUPERADMIN — full access; creates Agents/Farmers; audits
-- AGENT — manages assigned farms; can onboard farmers to their farms
-- FARMER — manages own cows; logs milk and activities
-
-Role access summary
-- Farm: SuperAdmin all; Agent limited to farms they manage; Farmer read-only if applicable
-- FarmerProfile: SuperAdmin all; Agent can create/update only within their farms; Farmer read-only (own)
-- Cow: SuperAdmin all; Agent within managed farms; Farmer only own cows in their farm
-- Activity/MilkRecord: SuperAdmin all; Agent only cows in managed farms; Farmer only their own cows
-
----
-
-## Data Model
-
-- accounts.User (custom): username, password, role {SUPERADMIN, AGENT, FARMER}
-- farms.Farm: name, location, agent → FK(User)
-- farms.FarmerProfile: user → OneToOne(User), farm → FK(Farm)
-- livestock.Cow: tag (unique per farm), breed, dob?, farm → FK(Farm), owner → FK(FarmerProfile)
-- livestock.Activity: cow → FK(Cow), type, notes, date
-- production.MilkRecord: cow → FK(Cow), date, liters
-
-Relationships
-- User ↔ FarmerProfile = 1–1
-- Farm ↔ FarmerProfile = 1–many
-- Farm ↔ Agent(User) = 1–1
-- Farm ↔ Cow = 1–many
-- FarmerProfile ↔ Cow = 1–many
-- Cow ↔ Activity = 1–many
-- Cow ↔ MilkRecord = 1–many
-
----
-
-## Local Setup (Windows PowerShell)
-
-Prereqs
-- Python 3.12+
-- PostgreSQL running locally with a database named `farmhub`
-
-Create venv and install deps
-
-```powershell
-cd C:\Users\User\Desktop\FarmHub-Management
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+## 2. Architecture Overview
+Monorepo layout:
 ```
-
-Database settings (root .env)
-
+core/        Django + DRF (auth, RBAC, CRUD)
+reporting/   FastAPI (read-only aggregation endpoints)
+docker-compose.yml (web=DRF, web-1=FastAPI, db=Postgres)
 ```
+Cross-cutting:
+- Shared Postgres schema
+- JWT auth (SimpleJWT)
+- Role scoping at queryset + permission + serializer validation layers
+- Consistent response envelope for explicit create/update (farms, livestock, milk records)
+
+## 3. Roles & Access (Summary Table)
+| Resource | SUPERADMIN | AGENT | FARMER |
+|----------|------------|-------|--------|
+| Users    | Full       | Read  | Read self |
+| Farms    | Full       | Own farms | Read scoped |
+| FarmerProfiles | Full | Create/Update within own farms | Own (read) |
+| Cows     | Full       | Cows in managed farms | Own cows |
+| Activities | Full    | Cows in managed farms | Own cows |
+| Milk Records | Full  | Cows in managed farms | Own cows |
+
+Enforcement techniques:
+- Custom permission classes (e.g. `FarmRBACPermission`, livestock permissions)
+- Queryset scoping (`get_queryset` per viewset)
+- Serializer `validate()` for ownership / role invariants
+
+## 4. Data Model (Key Entities)
+```
+User(role) ─1─┐
+			 │ (OneToOne)
+FarmerProfile ┘      Farm ──< Cow ──< Activity
+	(farm FK)  ^                └─< MilkRecord
+			   │ (agent = User with AGENT role)
+```
+Constraints:
+- Cow tag unique per farm
+- MilkRecord unique (cow, date)
+- FarmerProfile single farm membership
+
+## 5. Reporting Service (FastAPI)
+Read‑only aggregation endpoints (examples):
+- Global summary (farms / farmers / cows / total milk)
+- Farm summary & per‑cow milk production
+- Daily milk (date range filters)
+- Farmer summary (their cows + milk in range)
+- Recent activities (optional farm filter)
+
+Isolation rationale: avoids coupling write workload to analytic aggregate queries; easy to scale horizontally.
+
+## 6. Docker Quick Start (One Command)
+Prereqs: Docker & Docker Compose; create `.env` at repo root:
+```
+POSTGRES_DB=farmhub
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 DB_NAME=farmhub
 DB_USER=postgres
-DB_PASSWORD=1234
-DB_HOST=localhost
+DB_PASSWORD=postgres
+DB_HOST=db
 DB_PORT=5432
-
-DJANGO_SECRET_KEY=dev-secret-not-for-production
+DJANGO_SECRET_KEY=dev-secret
 DJANGO_DEBUG=true
 ```
+Start stack:
+```bash
+docker compose up --build
+```
+Services:
+- Core API: http://localhost:8000
+- Admin:   http://localhost:8000/admin/
+- Reporting: http://localhost:8001
 
-Apply migrations and seed data
+The web container auto‑runs migrations; superuser creation is attempted (ignored if exists).
 
+## 7. Local (Non‑Docker) Setup (Windows PowerShell)
 ```powershell
+python -m venv .venv
+./.venv/Scripts/Activate.ps1
+pip install -r requirements.txt
 cd core
-..\.venv\Scripts\python.exe manage.py migrate
-..\.venv\Scripts\python.exe manage.py createsuperuser  # optional (seed includes superadmin)
+../.venv/Scripts/python.exe manage.py migrate
 ```
-
-Seeded users are created by migration `accounts/0002_seed_initial_data.py` if not already present (see Seed Data below).
-
----
-
-## Running the Services
-
-Run Django (core API)
-
+Run core:
 ```powershell
-cd C:\Users\User\Desktop\FarmHub-Management\core
-..\.venv\Scripts\python.exe manage.py runserver
+../.venv/Scripts/python.exe manage.py runserver
 ```
-
-Visit
-- DRF browsable API: http://127.0.0.1:8000/
-- Admin: http://127.0.0.1:8000/admin/
-- Health: http://127.0.0.1:8000/healthz/
-
-Run FastAPI (reporting)
-
+Run reporting:
 ```powershell
-cd C:\Users\User\Desktop\FarmHub-Management\reporting
-..\.venv\Scripts\python.exe -m pip install -r requirements.txt  # once
-..\.venv\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+cd ..\reporting
+../.venv/Scripts/python.exe -m pip install -r requirements.txt
+../.venv/Scripts/python.exe -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-Reporting health: http://127.0.0.1:8001/health
-
----
-
-## Environment Variables
-
-Used by both services via python-decouple.
-
-- DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
-- DJANGO_SECRET_KEY, DJANGO_DEBUG
-
----
-
-## API Endpoints (examples)
-
-Core API (DRF)
-- GET /api/farms/ — list farms
-- POST /api/farms/ — create farm (role-based)
-- GET /api/cows/ — list cows
-- POST /api/milk-records/ — create milk record (farmer)
-
-Quick JWT flow (PowerShell)
+## 8. Authentication (JWT)
+Endpoints:
+- POST /auth/token/
+- POST /auth/token/refresh/
+Header: `Authorization: Bearer <access>`
+Example (PowerShell):
 ```powershell
-$token = Invoke-RestMethod -Method POST -Uri "http://127.0.0.1:8000/auth/token/" -ContentType "application/json" -Body '{"username":"farmer_sunamganj","password":"Farmer@123"}'
-$headers = @{ Authorization = "Bearer $($token.access)" }
-Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/cows/" -Headers $headers
+$t = Invoke-RestMethod -Method POST -Uri http://127.0.0.1:8000/auth/token/ -ContentType application/json -Body '{"username":"farmer_sunamganj","password":"Farmer@123"}'
+Invoke-RestMethod -Uri http://127.0.0.1:8000/api/cows/ -Headers @{Authorization = "Bearer $($t.access)"}
 ```
 
-Reporting (FastAPI)
-- GET /summary — totals across all farms
-- GET /reports/farm/{farm_id}/summary — farmers, cows, total milk
-- GET /reports/farm/{farm_id}/milk-production — totals by cow
-- GET /reports/farm/{farm_id}/daily-milk — daily totals (date range optional)
- - GET /reports/farmer/{user_id}/summary — farmer’s cows and total milk (optional date range)
- - GET /reports/activities/recent — latest activities, optional farm_id and limit
+## 9. Sample Core Endpoints
+| Action | Method | Path |
+|--------|--------|------|
+| List Farms | GET | /api/farms/ |
+| Create Farm | POST | /api/farms/ |
+| List Cows | GET | /api/cows/ |
+| Create Milk Record | POST | /api/milk-records/ |
+| List Activities | GET | /api/activities/ |
+
+Explicit responses for create/update/destroy include `{ "message": ..., "data": ... }`.
+
+## 10. Reporting Endpoints (Examples)
+| Endpoint | Purpose |
+|----------|---------|
+| GET /summary | Global counts & totals |
+| GET /reports/farm/{id}/summary | Farm metrics |
+| GET /reports/farm/{id}/milk-production | Per‑cow totals |
+| GET /reports/farm/{id}/daily-milk?date_from=&date_to= | Daily aggregation |
+| GET /reports/farmer/{user_id}/summary | Farmer milk & cows |
+| GET /reports/activities/recent?farm_id=&limit= | Latest activities |
+
+## 11. Seed Data (Migration 0002)
+Created if absent:
+- SUPERADMIN: `superadmin` / `SuperAdmin@123`
+- AGENT: `agent_rajshahi` / `Agent@123`
+- FARMER: `farmer_sunamganj` / `Farmer@123`
+- Farm + sample cows (3), activities, milk records
+
+## 12. Postman Collection
+File: `postman/FarmHub API.postman_collection.json`
+Folders: Auth / RBAC Scenarios / Core CRUD / Reporting.
+Login requests auto‑store tokens in `superAdminToken`, `agentToken`, `farmerToken`.
+Variables: `core_url`, `reporting_url`.
+
+## 13. Evaluation Mapping
+| Criterion | Evidence |
+|-----------|----------|
+| Correctness & Scope | Full CRUD + milk + activities + reporting queries |
+| Role-based Security | Permissions + queryset scoping + serializer validation |
+| Django Admin | Search, list_filter, inlines (activities & milk under cow; farmer profile inline under user) |
+| FastAPI Reporting | Aggregated endpoints & filtering |
+| Architecture & Reasoning | Separation of concerns, explicit methods, dockerized services |
+| Code Quality & Docs | Typed serializers, structured viewsets, this README, Postman |
+
+## 14. Troubleshooting
+- 401: Re-authenticate; token expired.
+- Empty lists: Role scoping hiding data (check user role).
+- Docker Postgres auth: Ensure `.env` POSTGRES_* matches compose service.
+- Migration race (first up): Restart web if DB wasn’t ready (compose handles via dependency, usually fine).
+
+## 15. Possible Next Enhancements
+- Add `recorded_by` to `MilkRecord` for provenance
+- Global search/filter backends in DRF
+- Caching layer for heavy reporting queries
+- Async task queue for large imports
+
+## 16. License
+MIT (adjust as needed).
 
 ---
-
-## Auth (JWT)
-
-Endpoints
-- POST /auth/token/ — obtain access/refresh (body: username, password)
-- POST /auth/token/refresh/ — refresh access token
-
-Usage
-- Add header to protected API calls: `Authorization: Bearer <access_token>`
-- DRF default permission is `IsAuthenticated` globally; viewsets add stricter role checks.
-- Users API is restricted to SuperAdmin/staff only; use Django Admin for general user management.
-
-Example (PowerShell, optional)
-
-```powershell
-Invoke-RestMethod -Method POST -Uri "http://127.0.0.1:8000/auth/token/" -ContentType "application/json" -Body '{"username":"farmer_sunamganj","password":"Farmer@123"}'
-```
-
----
-
-## Seed Data
-
-Created by `accounts/migrations/0002_seed_initial_data.py` (if users don’t already exist):
-
-- SuperAdmin: username `superadmin`, password `SuperAdmin@123`
-- Agent: username `agent_rajshahi`, password `Agent@123`
-- Farmer: username `farmer_sunamganj`, password `Farmer@123`
-- Farm: Padma Dairy Farm (Rajshahi, Bangladesh)
-- Cows: BD-RJ-001 (Red Chittagong), BD-RJ-002 (Sahiwal), BD-RJ-003 (Latest)
-- Milk records and activities for sample dates
-
----
-
-## Postman Collection
-
-
-This repo includes an exported Postman collection at `postman/FarmHub API.postman_collection.json` with:
-- 01 - Authentication: obtain JWT tokens for SuperAdmin, Agent, and Farmer
-- 02 - Role Scenarios (RBAC): sample PASS/FAIL requests demonstrating access rules (e.g., Farmer cannot create Farm)
-- 03 - Core API Examples (CRUD): common endpoints for cows, milk records, etc.
-- 04 - Reporting API: summary, farm summary, daily milk, milk production
-
-Usage
-- Import `postman/FarmHub API.postman_collection.json` into Postman.
-- The collection is parameterized. Collection variables:
-	- `core_url` (default: http://127.0.0.1:8000)
-	- `reporting_url` (default: http://127.0.0.1:8001)
-	Adjust them at the collection level if your host/ports differ.
-- Run the three requests under "01 - Authentication". Each test saves the returned access token to a collection variable:
-	- `superAdminToken`, `agentToken`, `farmerToken`
-- Requests in folders 02/03 use these variables via Bearer auth automatically (no manual pasting).
-
-The provided collection is organized as:
-- 01 - Authentication
-- 02 - Role Scenarios (RBAC)
-- 03 - Core API Examples (CRUD)
-- 04 - Reporting API
-
-How to use it
-1) Import the file `postman/FarmHub API.postman_collection.json` into Postman.
-2) If needed, set collection variables: `core_url` and `reporting_url` to match your runtime.
-3) Run the login requests in "01 - Authentication". Tokens are captured automatically into `superAdminToken`, `agentToken`, `farmerToken`.
-4) Run the scenarios in "02 - Role Scenarios (RBAC)" and "03 - Core API Examples (CRUD)"; they reference the captured tokens.
-5) "04 - Reporting API" uses `{{reporting_url}}` for `/summary`, `/reports/farm/{id}/summary`, `/health`, etc.
-
-Notes
-- Some requests use sample IDs; adjust IDs to match your data if needed.
-- If you get 401, re-run the relevant login to refresh the token variables.
-
----
-
-## Troubleshooting
-
-- 404 at root: The DRF browsable API is available at `/` and `/api/`.
-- Database errors: ensure PostgreSQL is running and `.env` has correct credentials.
-- Reporting DB errors: ensure the same DB env vars are visible to the FastAPI process.
-- Missing tables: run migrations in `core/` before starting reporting.
-
----
-
-## License
-
-MIT (or your choice)
+Interview friendly summary: FarmHub delivers secure multi‑role farm operations plus isolated reporting with a clean, testable architecture and production‑style container setup.
