@@ -43,18 +43,36 @@ class CowViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             headers = self.get_success_headers(serializer.data)
-            return Response({"message": "Cow created", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
+            return Response(
+                {"message": "Cow created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
 
         if Roles and role == Roles.AGENT:
-            if not farm_id or not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
+            if (
+                not farm_id
+                or not Farm.objects.filter(id=farm_id, agent_id=user.id).exists()
+            ):
                 raise PermissionDenied("You can only add cows to your managed farms.")
-            if owner_id and not FarmerProfile.objects.filter(id=owner_id, farm_id=farm_id).exists():
-                raise ValidationError({"owner_id": "Owner must belong to the same farm."})
+            if (
+                owner_id
+                and not FarmerProfile.objects.filter(
+                    id=owner_id, farm_id=farm_id
+                ).exists()
+            ):
+                raise ValidationError(
+                    {"owner_id": "Owner must belong to the same farm."}
+                )
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             headers = self.get_success_headers(serializer.data)
-            return Response({"message": "Cow created", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
+            return Response(
+                {"message": "Cow created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
 
         if Roles and role == Roles.FARMER:
             try:
@@ -71,7 +89,11 @@ class CowViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             headers = self.get_success_headers(serializer.data)
-            return Response({"message": "Cow created", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
+            return Response(
+                {"message": "Cow created", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
 
         raise PermissionDenied("Not allowed to create cows.")
 
@@ -85,17 +107,34 @@ class CowViewSet(viewsets.ModelViewSet):
         owner_id = request.data.get("owner_id")
 
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response({"message": "Cow updated", "data": serializer.data})
 
         if Roles and role == Roles.AGENT:
-            if farm_id and not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
-                raise PermissionDenied("You can only keep cows within your managed farms.")
-            if farm_id and owner_id and not FarmerProfile.objects.filter(id=owner_id, farm_id=farm_id).exists():
-                raise ValidationError({"owner_id": "Owner must belong to the same farm."})
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            if (
+                farm_id
+                and not Farm.objects.filter(id=farm_id, agent_id=user.id).exists()
+            ):
+                raise PermissionDenied(
+                    "You can only keep cows within your managed farms."
+                )
+            if (
+                farm_id
+                and owner_id
+                and not FarmerProfile.objects.filter(
+                    id=owner_id, farm_id=farm_id
+                ).exists()
+            ):
+                raise ValidationError(
+                    {"owner_id": "Owner must belong to the same farm."}
+                )
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response({"message": "Cow updated", "data": serializer.data})
@@ -107,7 +146,9 @@ class CowViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied("You do not have a farmer profile.")
             if farm_id and int(farm_id) != int(fp.farm_id):
                 raise PermissionDenied("You must keep the cow under your own farm.")
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial
+            )
             serializer.is_valid(raise_exception=True)
             if owner_id and int(owner_id) != int(fp.id):
                 serializer.save(owner_id=fp.id)
@@ -150,11 +191,17 @@ class ActivityViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             headers = self.get_success_headers(serializer.data)
-            return Response({"message": "Activity logged", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
+            return Response(
+                {"message": "Activity logged", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
 
         if Roles and role == Roles.AGENT:
             if not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists():
-                raise PermissionDenied("You can only log activities for cows in your farms.")
+                raise PermissionDenied(
+                    "You can only log activities for cows in your farms."
+                )
         elif Roles and role == Roles.FARMER:
             try:
                 fp = FarmerProfile.objects.get(user_id=user.id)
@@ -169,4 +216,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         headers = self.get_success_headers(serializer.data)
-        return Response({"message": "Activity logged", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            {"message": "Activity logged", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
