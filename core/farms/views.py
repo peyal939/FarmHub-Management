@@ -1,6 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from .models import Farm, FarmerProfile
 from .serializers import FarmSerializer, FarmerProfileSerializer
 
@@ -52,7 +53,31 @@ class FarmViewSet(viewsets.ModelViewSet):
             return qs.filter(agent_id=user.id)
         return qs.none()
 
-    # create/update/delete logic enforced by permission + serializer
+    # create/update/delete logic enforced by permission + serializer; explicit methods add response envelope
+
+    def create(self, request, *args, **kwargs):  # type: ignore[override]
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {"message": "Farm created", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
+    def update(self, request, *args, **kwargs):  # type: ignore[override]
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({"message": "Farm updated", "data": serializer.data})
+
+    def destroy(self, request, *args, **kwargs):  # type: ignore[override]
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"message": "Farm deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 
 class FarmerProfileViewSet(viewsets.ModelViewSet):
@@ -73,4 +98,30 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
             return qs.filter(user_id=user.id)
         return qs.none()
 
-    # create/update constraints are enforced within serializer validation
+    # create/update constraints are enforced within serializer validation; explicit response wrappers below
+
+    def create(self, request, *args, **kwargs):  # type: ignore[override]
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {"message": "Farmer profile created", "data": serializer.data},
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
+    def update(self, request, *args, **kwargs):  # type: ignore[override]
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({"message": "Farmer profile updated", "data": serializer.data})
+
+    def destroy(self, request, *args, **kwargs):  # type: ignore[override]
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {"message": "Farmer profile deleted"}, status=status.HTTP_204_NO_CONTENT
+        )
