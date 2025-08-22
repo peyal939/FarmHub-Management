@@ -4,7 +4,7 @@
 		"name": "FarmHub API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "47718339",
-		"_collection_link": "https://peyal-939-574707.postman.co/workspace/6e692980-2a8f-4801-8995-8959b8f0a49a/collection/47718339-08f93012-9e85-4d0d-a483-7ef806b0f454?action=share&source=collection_link&creator=47718339"
+		"_collection_link": "https://peyal-939-574707.postman.co/workspace/Nahidul-Islam-Peyal's-Workspace~6e692980-2a8f-4801-8995-8959b8f0a49a/collection/47718339-08f93012-9e85-4d0d-a483-7ef806b0f454?action=share&source=collection_link&creator=47718339"
 	},
 	"item": [
 		{
@@ -164,7 +164,208 @@
 			]
 		},
 		{
-			"name": "02 - Role Scenarios (RBAC)",
+			"name": "02-Users CRUD",
+			"item": [
+				{
+					"name": "Update User (PUT)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"agent_rajshahi\",\n    \"email\": \"agent_rajshahi_updated@example.com\",\n    \"first_name\": \"Raj\",\n    \"last_name\": \"Shahi\",\n    \"role\": \"AGENT\",\n    \"is_active\": true,\n    \"password\": \"NewStrongPass123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{core_url}}/api/users/3/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"3",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/users/3/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"3",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/users/6/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"6",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/users/2/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"2",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"new_agent1\",\n    \"password\": \"StrongPass123!\",\n    \"email\": \"new_agent1@example.com\",\n    \"first_name\": \"New\",\n    \"last_name\": \"Agent\",\n    \"role\": \"AGENT\",\n    \"is_active\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{core_url}}/api/users/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/users/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03 - Role Scenarios (RBAC)",
 			"item": [
 				{
 					"name": "[PASS] SuperAdmin Creates Farm",
@@ -198,6 +399,45 @@
 							"path": [
 								"api",
 								"farms",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[PASS] Admin Update Farm (PUT)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \" Dairy Farm\",\n    \"location\": \"Rajshahi, Bangladesh\",\n    \"agent_id\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{core_url}}/api/farms/16/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"farms",
+								"16",
 								""
 							]
 						}
@@ -288,8 +528,79 @@
 			]
 		},
 		{
-			"name": "03 - Core API Examples (CRUD)",
+			"name": "04 - Core API Examples (CRUD)",
 			"item": [
+				{
+					"name": "Admin Lists Farms",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/farms/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"farms",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Get Farm by ID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{core_url}}/api/farms/16/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"farms",
+								"16",
+								""
+							]
+						}
+					},
+					"response": []
+				},
 				{
 					"name": "Farmer Lists Their Cows",
 					"request": {
@@ -320,6 +631,36 @@
 					"response": []
 				},
 				{
+					"name": "Admin Delete Farm",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{superAdminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/farms/17/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"farms",
+								"17",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Farmer Adds a Milk Record",
 					"request": {
 						"auth": {
@@ -336,7 +677,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"cow_id\": 3, \"date\": \"2025-08-22\", \"liters\": \"9.20\" }",
+							"raw": "{ \"cow_id\": 2, \"date\": \"2025-08-22\", \"liters\": \"7.50\" }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -382,15 +723,280 @@
 							}
 						},
 						"url": {
-							"raw": "{{core_url}}/api/milk-records/3/",
+							"raw": "{{core_url}}/api/milk-records/2/",
 							"host": [
 								"{{core_url}}"
 							],
 							"path": [
 								"api",
 								"milk-records",
+								"2",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Farmar Create Animal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tag\": \"BD-RJ-010\",\n    \"breed\": \"Sahiwal\",\n    \"dob\": \"2025-05-12\",\n    \"farm_id\": 1,\n    \"owner_id\": 1}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{core_url}}/api/cows/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"cows",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Farmer Get Animal by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/cows/2",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"cows",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Farmer Delete Animal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/cows/4/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"cows",
+								"4",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Animal (PUT)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tag\": \"BD-RJ-010\",\n    \"breed\": \"Sahiwal\",\n    \"dob\": \"2025-05-12\",\n    \"farm_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{core_url}}/api/cows/3/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"cows",
 								"3",
 								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Milk Production Records",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/milk-records/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"milk-records",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Milk Production Record",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/milk-records/12/",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"milk-records",
+								"12",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Milk Production Record by Cow ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}}/api/milk-records/?cow_id=3",
+							"host": [
+								"{{core_url}}"
+							],
+							"path": [
+								"api",
+								"milk-records",
+								""
+							],
+							"query": [
+								{
+									"key": "cow_id",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Milk Production Record by Date",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{farmerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{core_url}} /api/milk-records/?date_from=2025-08-01",
+							"host": [
+								"{{core_url}} "
+							],
+							"path": [
+								"api",
+								"milk-records",
+								""
+							],
+							"query": [
+								{
+									"key": "date_from",
+									"value": "2025-08-01"
+								}
 							]
 						}
 					},
@@ -399,7 +1005,7 @@
 			]
 		},
 		{
-			"name": "04 - Reporting API",
+			"name": "05 - Reporting API",
 			"item": [
 				{
 					"name": "Get General Summary",

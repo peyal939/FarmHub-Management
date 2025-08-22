@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import MilkRecord
 from .serializers import MilkRecordSerializer
@@ -105,3 +106,30 @@ class MilkRecordViewSet(viewsets.ModelViewSet):
         from rest_framework.exceptions import PermissionDenied
 
         raise PermissionDenied("Not allowed to update milk records.")
+
+    def list(self, request, *args, **kwargs):
+        """List milk records with optional filtering.
+
+        Query Params:
+          - cow_id: int (restrict to a single cow)
+          - date_from: YYYY-MM-DD (inclusive lower bound)
+          - date_to: YYYY-MM-DD (inclusive upper bound)
+        The base queryset is already role-scoped in get_queryset.
+        """
+        queryset = self.get_queryset()
+        cow_id = request.query_params.get("cow_id")
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+        if cow_id:
+            queryset = queryset.filter(cow_id=cow_id)
+        if date_from:
+            queryset = queryset.filter(date__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(date__lte=date_to)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
