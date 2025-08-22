@@ -3,3 +3,8 @@ psycopg[binary]>=3.2,<4.0
 djangorestframework>=3.15,<4.0
 djangorestframework-simplejwt>=5.3,<6.0
 python-decouple>=3.8,<4.0
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+python-decouple==3.8

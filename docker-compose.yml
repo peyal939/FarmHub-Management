@@ -1,0 +1,49 @@
+version: "3.12"
+
+services:
+  web:
+    build: .
+    container_name: farmhub_bd_web
+    command: >
+      sh -c "python core/manage.py migrate &&
+             python core/manage.py createsuperuser --noinput || true &&
+             python core/manage.py runserver 0.0.0.0:8000"
+             
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  web-1:
+    build: .
+    container_name: farmhub_bd_fast_api
+    command: >
+      sh -c "cd reporting &&
+             python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: farmhub_bd_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+      
+volumes:
+  postgres_data:
