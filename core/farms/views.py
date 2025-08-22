@@ -122,4 +122,6 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):  # type: ignore[override]
         instance = self.get_object()
         self.perform_destroy(instance)
-        return Response({"message": "Farmer profile deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "Farmer profile deleted"}, status=status.HTTP_204_NO_CONTENT
+        )
