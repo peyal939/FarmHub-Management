@@ -21,9 +21,7 @@ class FarmRBACPermission(BasePermission):
             return True
         role = getattr(user, "role", None)
         Roles = getattr(user.__class__, "Roles", None)
-        if getattr(user, "is_superuser", False) or (
-            Roles and role == Roles.SUPERADMIN
-        ):
+        if getattr(user, "is_superuser", False) or (Roles and role == Roles.SUPERADMIN):
             return True
         return Roles and role == Roles.AGENT
 
@@ -33,9 +31,7 @@ class FarmRBACPermission(BasePermission):
         user = request.user
         role = getattr(user, "role", None)
         Roles = getattr(user.__class__, "Roles", None)
-        if getattr(user, "is_superuser", False) or (
-            Roles and role == Roles.SUPERADMIN
-        ):
+        if getattr(user, "is_superuser", False) or (Roles and role == Roles.SUPERADMIN):
             return True
         return Roles and role == Roles.AGENT and obj.agent_id == user.id
 
@@ -50,9 +46,7 @@ class FarmViewSet(viewsets.ModelViewSet):
         user = self.request.user
         role = getattr(user, "role", None)
         Roles = getattr(user.__class__, "Roles", None)
-        if getattr(user, "is_superuser", False) or (
-            Roles and role == Roles.SUPERADMIN
-        ):
+        if getattr(user, "is_superuser", False) or (Roles and role == Roles.SUPERADMIN):
             return qs
         if user.is_authenticated and Roles and role == Roles.AGENT:
             return qs.filter(agent_id=user.id)

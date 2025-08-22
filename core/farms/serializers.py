@@ -113,7 +113,9 @@ class FarmerProfileSerializer(serializers.ModelSerializer):
             if not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
                 from rest_framework.exceptions import PermissionDenied
 
-                raise PermissionDenied("You can only manage profiles for your own farms.")
+                raise PermissionDenied(
+                    "You can only manage profiles for your own farms."
+                )
             return attrs
 
         # Farmers cannot create/update profiles themselves
