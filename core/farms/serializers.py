@@ -27,39 +27,41 @@ class FarmSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Selected user is not an AGENT.")
         return value
 
-    def create(self, validated_data):
+    def validate(self, attrs):
+        """Central RBAC validation for create/update on Farm."""
         request = self.context.get("request")
         user = getattr(request, "user", None)
-        # Fallback: if no request, behave safely (deny farmer scenarios by requiring explicit agent)
         if user is None or not getattr(user, "is_authenticated", False):
             raise serializers.ValidationError("Authentication required.")
-
-        # Superadmin: allow, pass through agent_id if provided
-        if (
-            getattr(user, "is_superuser", False)
-            or getattr(user, "role", None)
-            == getattr(user.__class__, "Roles").SUPERADMIN
-        ):
-            agent_id = validated_data.pop("agent_id", None)
-            if agent_id is not None:
-                validated_data["agent_id"] = agent_id
-            return super().create(validated_data)
-
-        # Agent: enforce self-assignment only
         role = getattr(user, "role", None)
-        if role == getattr(user.__class__, "Roles").AGENT:
-            agent_id = validated_data.pop("agent_id", None)
-            if agent_id is not None and str(agent_id) != str(user.id):
-                raise serializers.ValidationError(
-                    "Agents can only assign themselves as agent."
-                )
-            validated_data["agent_id"] = user.id
-            return super().create(validated_data)
+        Roles = getattr(user.__class__, "Roles", None)
+        creating = self.instance is None
 
-        # Farmer/others: block
+        # Superadmin bypass
+        if getattr(user, "is_superuser", False) or (Roles and role == Roles.SUPERADMIN):
+            return attrs
+
+        # Agent rules
+        if Roles and role == Roles.AGENT:
+            agent_id = attrs.pop("agent_id", None)
+            if creating:
+                if agent_id and str(agent_id) != str(user.id):
+                    raise serializers.ValidationError(
+                        "Agents can only create farms for themselves."
+                    )
+                attrs["agent_id"] = user.id
+            else:
+                # On update, agent_id cannot change to someone else
+                if agent_id and str(agent_id) != str(user.id):
+                    raise serializers.ValidationError(
+                        "Agents cannot reassign farms to other agents."
+                    )
+            return attrs
+
+        # Farmers / others blocked
         from rest_framework.exceptions import PermissionDenied
 
-        raise PermissionDenied("Not allowed to create farms.")
+        raise PermissionDenied("Not allowed to create or modify farms.")
 
     def update(self, instance, validated_data):
         agent_id = validated_data.pop("agent_id", None)
@@ -88,13 +90,35 @@ class FarmerProfileSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Selected user is not a FARMER.")
         return value
 
-    def create(self, validated_data):
-        user_id = validated_data.pop("user_id")
-        validated_data["user_id"] = user_id
-        return super().create(validated_data)
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if user is None or not getattr(user, "is_authenticated", False):
+            raise serializers.ValidationError("Authentication required.")
+        role = getattr(user, "role", None)
+        Roles = getattr(user.__class__, "Roles", None)
+        creating = self.instance is None
 
-    def update(self, instance, validated_data):
-        user_id = validated_data.pop("user_id", None)
-        if user_id is not None:
-            instance.user_id = user_id
-        return super().update(instance, validated_data)
+        # Superadmin/staff bypass
+        if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            return attrs
+
+        if Roles and role == Roles.AGENT:
+            farm = attrs.get("farm")
+            farm_id = getattr(farm, "id", farm) if farm else None
+            if not farm_id:
+                raise serializers.ValidationError({"farm": "This field is required."})
+            from .models import Farm
+
+            if not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
+                from rest_framework.exceptions import PermissionDenied
+
+                raise PermissionDenied("You can only manage profiles for your own farms.")
+            return attrs
+
+        # Farmers cannot create/update profiles themselves
+        if creating:
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied("Not allowed to create farmer profiles.")
+        return attrs
