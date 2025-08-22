@@ -16,27 +16,7 @@ class FarmViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsSuperAdminOrAgent()]
         return super().get_permissions()
 
-    def create(self, request, *args, **kwargs):
-        """Extra guardrail to prevent Farmers from creating farms via serializer shortcuts."""
-        from rest_framework.exceptions import PermissionDenied
-
-        user = request.user
-        if (
-            getattr(user, "is_superuser", False)
-            or getattr(user, "role", None)
-            == getattr(user.__class__, "Roles").SUPERADMIN
-        ):
-            return super().create(request, *args, **kwargs)
-        role = getattr(user, "role", None)
-        if role == getattr(user.__class__, "Roles").AGENT:
-            # If agent passes a different agent_id, block here early
-            agent_id = request.data.get("agent_id")
-            if agent_id is not None and str(agent_id) != str(user.id):
-                raise PermissionDenied(
-                    "Agents can only create farms assigned to themselves."
-                )
-            return super().create(request, *args, **kwargs)
-        raise PermissionDenied("Not allowed to create farms.")
+    # create() override removed; serializer + perform_create enforce RBAC
 
     def get_queryset(self):
         # Explicit base queryset to ensure select_related always applies
