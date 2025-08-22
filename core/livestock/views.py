@@ -30,64 +30,58 @@ class CowViewSet(viewsets.ModelViewSet):
             return qs.filter(owner__user_id=user.id)
         return qs.none()
 
-    def perform_create(self, serializer):
-        user = self.request.user
+    def create(self, request, *args, **kwargs):
+        """Custom create with embedded RBAC & normalized response."""
+        from rest_framework import status
+        from rest_framework.response import Response
+        from rest_framework.exceptions import PermissionDenied, ValidationError
+
+        user = request.user
         role = getattr(user, "role", None)
-        # Superadmin/staff bypass
+        farm_id = request.data.get("farm_id")
+        owner_id = request.data.get("owner_id")
+
+        # Superadmin/staff: pass straight through
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
-            return
+            headers = self.get_success_headers(serializer.data)
+            return Response({"message": "Cow created", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
 
-        farm_id = self.request.data.get("farm_id")
-        owner_id = self.request.data.get("owner_id")
-        if role == getattr(user.__class__, "Roles").AGENT:
-            # Agent can only create within managed farms, any farmer under those farms
+        Roles = getattr(user.__class__, "Roles", None)
+        # Agent flow
+        if Roles and role == Roles.AGENT:
             from farms.models import Farm, FarmerProfile
-
-            if (
-                not farm_id
-                or not Farm.objects.filter(id=farm_id, agent_id=user.id).exists()
-            ):
-                from rest_framework.exceptions import PermissionDenied
-
+            if not farm_id or not Farm.objects.filter(id=farm_id, agent_id=user.id).exists():
                 raise PermissionDenied("You can only add cows to your managed farms.")
-            if (
-                owner_id
-                and not FarmerProfile.objects.filter(
-                    id=owner_id, farm_id=farm_id
-                ).exists()
-            ):
-                from rest_framework.exceptions import ValidationError
-
-                raise ValidationError(
-                    {"owner_id": "Owner must belong to the same farm."}
-                )
+            if owner_id and not FarmerProfile.objects.filter(id=owner_id, farm_id=farm_id).exists():
+                raise ValidationError({"owner_id": "Owner must belong to the same farm."})
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
-            return
+            headers = self.get_success_headers(serializer.data)
+            return Response({"message": "Cow created", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
 
-        if role == getattr(user.__class__, "Roles").FARMER:
-            # Force owner_id to the farmer's own profile; enforce farm match
+        # Farmer flow
+        if Roles and role == Roles.FARMER:
             from farms.models import FarmerProfile
-
             try:
                 fp = FarmerProfile.objects.select_related("farm").get(user_id=user.id)
             except FarmerProfile.DoesNotExist:
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You do not have a farmer profile.")
             if not farm_id:
-                from rest_framework.exceptions import ValidationError
-
                 raise ValidationError({"farm_id": "This field is required."})
             if int(farm_id) != int(fp.farm_id):
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You can only enroll cows under your own farm.")
-            # Save with enforced owner
-            serializer.save(owner_id=fp.id)
-            return
-
-        from rest_framework.exceptions import PermissionDenied
+            # Force owner to self's profile
+            mutable_data = request.data.copy()
+            mutable_data["owner_id"] = fp.id
+            serializer = self.get_serializer(data=mutable_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            headers = self.get_success_headers(serializer.data)
+            return Response({"message": "Cow created", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
 
         raise PermissionDenied("Not allowed to create cows.")
 
@@ -167,37 +161,41 @@ class ActivityViewSet(viewsets.ModelViewSet):
             return qs.filter(cow__owner__user_id=user.id)
         return qs.none()
 
-    def perform_create(self, serializer):
-        user = self.request.user
+    def create(self, request, *args, **kwargs):  # type: ignore[override]
+        from rest_framework import status
+        from rest_framework.response import Response
+        from rest_framework.exceptions import PermissionDenied
+
+        user = request.user
         role = getattr(user, "role", None)
+        cow_id = request.data.get("cow_id")
+        Roles = getattr(user.__class__, "Roles", None)
+
+        # Superadmin/staff bypass
         if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
-            return serializer.save()
-        cow_id = self.request.data.get("cow_id")
-        if role == getattr(user.__class__, "Roles").AGENT:
-            from livestock.models import Cow
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            headers = self.get_success_headers(serializer.data)
+            return Response({"message": "Activity logged", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
 
+        from livestock.models import Cow
+        if Roles and role == Roles.AGENT:
             if not Cow.objects.filter(id=cow_id, farm__agent_id=user.id).exists():
-                from rest_framework.exceptions import PermissionDenied
-
-                raise PermissionDenied(
-                    "You can only log activities for cows in your farms."
-                )
-            return serializer.save()
-        if role == getattr(user.__class__, "Roles").FARMER:
+                raise PermissionDenied("You can only log activities for cows in your farms.")
+        elif Roles and role == Roles.FARMER:
             from farms.models import FarmerProfile
-            from livestock.models import Cow
-
             try:
                 fp = FarmerProfile.objects.get(user_id=user.id)
             except FarmerProfile.DoesNotExist:
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You do not have a farmer profile.")
             if not Cow.objects.filter(id=cow_id, owner_id=fp.id).exists():
-                from rest_framework.exceptions import PermissionDenied
-
                 raise PermissionDenied("You can only log activities for your own cows.")
-            return serializer.save()
-        from rest_framework.exceptions import PermissionDenied
+        else:
+            raise PermissionDenied("Not allowed to create activities.")
 
-        raise PermissionDenied("Not allowed to create activities.")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response({"message": "Activity logged", "data": serializer.data}, status=status.HTTP_201_CREATED, headers=headers)
