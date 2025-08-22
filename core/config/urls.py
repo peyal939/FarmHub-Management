@@ -23,18 +23,6 @@ urlpatterns = [
             ]
         ),
     ),
-    # Optionally mirror at root for now (can be removed later)
-    path(
-        "",
-        include(
-            [
-                path("", include("accounts.urls", namespace="accounts-root")),
-                path("", include("farms.urls", namespace="farms-root")),
-                path("", include("livestock.urls", namespace="livestock-root")),
-                path("", include("production.urls", namespace="production-root")),
-            ]
-        ),
-    ),
     # Simple health/ping endpoint
     path("healthz/", lambda request: JsonResponse({"status": "ok"}), name="healthz"),
 ]
